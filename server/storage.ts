@@ -44,6 +44,7 @@ export interface IStorage {
   // Recipe operations
   getRecipe(id: string): Promise<Recipe | undefined>;
   getRecipesByUserId(userId: string): Promise<Recipe[]>;
+  getRecipesByConversationId(conversationId: string): Promise<Recipe[]>;
   getSavedRecipesByUserId(userId: string): Promise<Recipe[]>;
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
   updateRecipeSaveStatus(id: string, isSaved: boolean): Promise<Recipe | undefined>;
@@ -167,6 +168,14 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(recipes)
       .where(eq(recipes.userId, userId))
+      .orderBy(desc(recipes.createdAt));
+  }
+
+  async getRecipesByConversationId(conversationId: string): Promise<Recipe[]> {
+    return db
+      .select()
+      .from(recipes)
+      .where(eq(recipes.conversationId, conversationId))
       .orderBy(desc(recipes.createdAt));
   }
 

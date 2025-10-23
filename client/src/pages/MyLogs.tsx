@@ -1,49 +1,33 @@
 import FoodLogCard from "@/components/FoodLogCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import caponataImg from "@assets/generated_images/Italian_caponata_dish_c8849bba.png";
-import thaiImg from "@assets/generated_images/Thai_basil_stir-fry_dish_cacb8d40.png";
-
-//todo: remove mock functionality
-const mockLogs = [
-  {
-    id: "log_1",
-    dishName: "カポナータ",
-    country: "イタリア",
-    region: "南イタリア",
-    date: "2025年10月20日",
-    rating: 5,
-    imageUrl: caponataImg,
-    notes: "とても美味しかった！家族にも好評でした。",
-  },
-  {
-    id: "log_2",
-    dishName: "ガパオライス",
-    country: "タイ",
-    date: "2025年10月18日",
-    rating: 4,
-    imageUrl: thaiImg,
-    notes: "辛さがちょうど良かった。次回はもう少しバジルを多めに。",
-  },
-];
-
-const mockSaved = [
-  {
-    id: "save_1",
-    dishName: "バターチキン",
-    country: "インド",
-    region: "北インド",
-    date: "保存日: 2025年10月22日",
-    rating: 0,
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import type { FoodLog, Recipe } from "@shared/schema";
 
 export default function MyLogs() {
+  const { data: logs = [], isLoading: logsLoading } = useQuery<FoodLog[]>({
+    queryKey: ["/api/logs"],
+  });
+
+  const { data: savedRecipes = [], isLoading: savedLoading } = useQuery<Recipe[]>({
+    queryKey: ["/api/recipes/saved"],
+  });
+
+  if (logsLoading || savedLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <p className="text-muted-foreground">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-display font-bold mb-2">マイログ</h1>
         <p className="text-muted-foreground mb-6">
-          前回はタイ料理を作りましたね。今日はインド料理にしますか？
+          料理の記録を管理しましょう
         </p>
 
         <Tabs defaultValue="logs" className="w-full">
@@ -60,18 +44,47 @@ export default function MyLogs() {
           </TabsList>
 
           <TabsContent value="logs" className="space-y-4">
-            {mockLogs.map((log) => (
-              <FoodLogCard key={log.id} {...log} />
-            ))}
+            {logs.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>まだ記録がありません</p>
+                <p className="text-sm mt-2">
+                  料理を作ったり食べたりしたら記録してみましょう
+                </p>
+              </div>
+            ) : (
+              logs.map((log) => (
+                <FoodLogCard
+                  key={log.id}
+                  id={log.id}
+                  dishName={log.dishName}
+                  country={log.region || ""}
+                  date={new Date(log.date).toLocaleDateString("ja-JP")}
+                  rating={log.rating || 0}
+                  imageUrl={log.imageUrl || undefined}
+                  notes={log.notes || undefined}
+                />
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="saved" className="space-y-4">
-            {mockSaved.map((item) => (
-              <FoodLogCard key={item.id} {...item} />
-            ))}
-            <div className="text-center py-12 text-muted-foreground">
-              <p>他に保存されたレシピはありません</p>
-            </div>
+            {savedRecipes.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>保存されたレシピはありません</p>
+              </div>
+            ) : (
+              savedRecipes.map((recipe) => (
+                <FoodLogCard
+                  key={recipe.id}
+                  id={recipe.id}
+                  dishName={recipe.name}
+                  country={recipe.region}
+                  date={`保存日: ${new Date(recipe.createdAt).toLocaleDateString("ja-JP")}`}
+                  rating={0}
+                  imageUrl={recipe.imageUrl || undefined}
+                />
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="queue" className="space-y-4">

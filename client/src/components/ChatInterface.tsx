@@ -3,6 +3,9 @@ import { Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -11,26 +14,67 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
-  onSendMessage?: (message: string) => void;
+  conversationId?: string;
   initialMessages?: Message[];
+  onNewMessage?: (conversationId: string, message: string) => void;
 }
 
-export default function ChatInterface({ onSendMessage, initialMessages = [] }: ChatInterfaceProps) {
+export default function ChatInterface({ 
+  conversationId: propConversationId, 
+  initialMessages = [],
+  onNewMessage,
+}: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
+  const [conversationId, setConversationId] = useState<string | undefined>(propConversationId);
+  const { toast } = useToast();
+
+  const chatMutation = useMutation({
+    mutationFn: async (message: string) => {
+      const response = await apiRequest(
+        "POST",
+        "/api/chat/completion",
+        {
+          conversationId,
+          message,
+        }
+      );
+      const data = await response.json();
+      return data as { conversationId: string; message: string };
+    },
+    onSuccess: (data) => {
+      setConversationId(data.conversationId);
+      
+      const assistantMessage: Message = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: data.message,
+      };
+      
+      setMessages((prev) => [...prev, assistantMessage]);
+      onNewMessage?.(data.conversationId, data.message);
+    },
+    onError: (error) => {
+      toast({
+        title: "エラー",
+        description: "メッセージの送信に失敗しました。もう一度お試しください。",
+        variant: "destructive",
+      });
+      console.error("Chat error:", error);
+    },
+  });
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || chatMutation.isPending) return;
     
-    const newMessage: Message = {
-      id: Date.now().toString(),
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
       role: "user",
       content: input,
     };
     
-    setMessages([...messages, newMessage]);
-    onSendMessage?.(input);
-    console.log("Message sent:", input);
+    setMessages((prev) => [...prev, userMessage]);
+    chatMutation.mutate(input);
     setInput("");
   };
 
@@ -77,7 +121,7 @@ export default function ChatInterface({ onSendMessage, initialMessages = [] }: C
               }`}
               data-testid={`message-${message.role}`}
             >
-              <p className="text-sm">{message.content}</p>
+              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
             </div>
             
             {message.role === "user" && (
@@ -89,6 +133,23 @@ export default function ChatInterface({ onSendMessage, initialMessages = [] }: C
             )}
           </div>
         ))}
+        
+        {chatMutation.isPending && (
+          <div className="flex gap-3 justify-start">
+            <Avatar className="h-8 w-8 mt-1">
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                <Globe className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="rounded-2xl px-4 py-3 bg-card border border-card-border">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse delay-75"></div>
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse delay-150"></div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="border-t p-4">
@@ -100,11 +161,12 @@ export default function ChatInterface({ onSendMessage, initialMessages = [] }: C
             placeholder="例: イタリアで軽め、20分以内で作れる料理"
             className="flex-1"
             data-testid="input-chat"
+            disabled={chatMutation.isPending}
           />
           <Button
             onClick={handleSend}
             size="icon"
-            disabled={!input.trim()}
+            disabled={!input.trim() || chatMutation.isPending}
             data-testid="button-send"
           >
             <Send className="h-4 w-4" />
