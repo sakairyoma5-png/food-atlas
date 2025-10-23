@@ -1,4 +1,5 @@
 import { Globe } from "lucide-react";
+import { SiX, SiInstagram, SiFacebook } from "react-icons/si";
 import { Link } from "wouter";
 
 export default function Footer() {
@@ -82,15 +83,30 @@ export default function Footer() {
 
         <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
           <p>&copy; 2025 Food Atlas. All rights reserved.</p>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-foreground transition-colors">
-              Twitter
+          <div className="flex gap-4">
+            <a
+              href="#"
+              className="hover:text-foreground transition-colors"
+              aria-label="X (Twitter)"
+              data-testid="link-twitter"
+            >
+              <SiX className="h-5 w-5" />
             </a>
-            <a href="#" className="hover:text-foreground transition-colors">
-              Instagram
+            <a
+              href="#"
+              className="hover:text-foreground transition-colors"
+              aria-label="Instagram"
+              data-testid="link-instagram"
+            >
+              <SiInstagram className="h-5 w-5" />
             </a>
-            <a href="#" className="hover:text-foreground transition-colors">
-              Facebook
+            <a
+              href="#"
+              className="hover:text-foreground transition-colors"
+              aria-label="Facebook"
+              data-testid="link-facebook"
+            >
+              <SiFacebook className="h-5 w-5" />
             </a>
           </div>
         </div>
