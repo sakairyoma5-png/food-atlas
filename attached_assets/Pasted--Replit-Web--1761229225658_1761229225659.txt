@@ -1,0 +1,375 @@
+了解です。Replit に貼ってそのまま実装指示として使える、**機能に強く寄せた開発プロンプト**を用意しました。
+（前提：最初は Web アプリ。配送・予約は実装しません。**会話で探す→学ぶ→決める→記録**のコア体験に集中）
+
+---
+
+# 🚀 Replit 開発プロンプト｜FoodAtlas（Web会話型MVP）
+
+## 🎯 ゴール
+
+* 会話ベースで**無制限に料理を探索**でき、3ターン前後で最初の候補を返す
+* **候補カード3件**を継続表示（無限スクロール/“さらに3件”）
+* **レシピ詳細**（代替食材・栄養概算つき）をJSONスキーマ準拠で生成
+* **豆知識**（国/地域/料理）をセッション1回提示、詳しくモーダル
+* **地球儀/地図**から国→主要地域を選択、AIコメント連動
+* **食べた・作った記録（マイログ）**を保存・閲覧・再利用
+* **最近見た/保存/下書き**で探索を“軽く記憶”して習慣化の導線を作る
+* **PWA簡易対応**（ホーム追加、保存レシピのオフライン閲覧）
+
+---
+
+## 🏗 アーキテクチャ（最小構成）
+
+* Frontend: Next.js 14（App Router）+ TypeScript + Tailwind
+* Backend: Python（FastAPI でも Django REST でも可。ここでは **FastAPI** を推奨）
+* DB: SQLite（後日 Postgres へ移行可能に）
+* LLM: OpenAI API（.env で鍵）
+* Maps: 国/地域はまず静的地図（GeoJSON）→後で地球儀へ
+* 計測: シンプルに API ログ or PostHog SDK
+
+**Repo 構成**
+
+```
+foodatlas/
+  apps/web/                 # Next.js
+  server/                   # FastAPI + DB + 外部API
+  packages/
+    schemas/                # Zod/TS型：フロント/サーバで共通
+    conversation-core/      # スロット/状態管理のヘルパ
+  .env.example
+  README.md
+```
+
+---
+
+## 📦 機能別 要求 & 受入基準（DoD）
+
+### 1) 会話で料理決定（探索＋決定）
+
+**要件**
+
+* 会話入力 → 3ターン以内に最初の候補3件（以降は**回数無制限で再提案**）
+* **微調整ショートカット**：`もっと辛く` / `15分以内` / `4人分` / `香草なし`
+* **比較トレイ**：最大5件を横並び比較（時間/難易度/主材料/地域タグ）
+* 候補カードを**MMR**で多様化（似すぎる提案を抑制）
+* 保存（☆）/ 下書き（Queue）/ “これで作る” の着地ボタン
+
+**DoD**
+
+* 最初の候補提示までの平均ターン ≤ 2.5
+* 候補→詳細遷移率 ≥ 60%
+* 保存率 ≥ 20%、下書き投入率 ≥ 10%
+
+---
+
+### 2) レシピ詳細（代替食材・栄養概算）
+
+**要件**
+
+* JSONスキーマ準拠で出力（Zod で検証。欠落時は再試行）
+* **代替食材（alt）** は各食材に1つ以上付与（国内入手容易なもの）
+* **栄養概算**：kcal, P, F, C（1人前）
+* **人数切替**：前後端で分量再計算
+
+**DoD**
+
+* 不正JSONは UI に出さず再試行
+* 人数切替時に分量と栄養が整合
+
+---
+
+### 3) 豆知識（食文化のマイクロ学習）
+
+**要件**
+
+* セッションにつき**1回**トースト表示＋［詳しく］モーダル（150–200字）
+* 出典ラベル `source_label` を表示
+* 国/地域/料理キーで抽選、重複回避（weight で調整）
+
+**DoD**
+
+* 豆知識閲覧後の保存/行動が +5% 以上向上（簡易計測でよい）
+
+---
+
+### 4) 世界選択UI（国→主要地域）
+
+**要件**
+
+* 国選択（プルダウン or 簡易地図）→ 主要地域10箇所（南イタリア/四川/関西…）
+* 選択直後に**AIコメント連動**（代表料理2品＋所要時間一言）
+* コメント中の料理名は**チップ**でタップ→詳細生成
+
+**DoD**
+
+* 選択→コメント提示まで < 800ms
+* コメント経由の候補クリック率 ≥ 60%
+
+---
+
+### 5) “食べた・作った”記録（マイログ）
+
+**要件**
+
+* 日付自動／料理名／国・地域／★1–5／任意で写真1枚・メモ
+* リスト表示、**“もう一度作る/似た料理を探す”**ショートカット
+
+**DoD**
+
+* 記録率 ≥ 20%、再利用導線のクリック可
+
+---
+
+### 6) 最近見た/保存/下書き（軽い記憶）
+
+**要件**
+
+* `最近見た`：候補カード閲覧や展開を自動記録
+* `保存（☆）`：お気に入り
+* `下書き（Queue）`：週献立のタネにする“仮置き”
+* ウェルカムに**履歴一言**：「前回はタイでした。今日はインドにします？」
+
+**DoD**
+
+* `/api/recent` で三種が返る
+* 履歴一言の表示で候補クリック率 +10%
+
+---
+
+### 7) PWA 簡易対応
+
+**要件**
+
+* Web App Manifest / Service Worker（保存レシピの軽量オフライン閲覧）
+* ホーム追加促し
+
+**DoD**
+
+* オフラインでも保存レシピが閲覧可能
+
+---
+
+## 🧰 スキーマ & API（厳密）
+
+### Zod（packages/schemas）
+
+```ts
+import { z } from "zod";
+
+export const CandidateSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  country: z.string(),
+  region: z.string().nullable().optional(),
+  time_min: z.number().int().nonnegative(),
+  difficulty: z.enum(["easy","medium","hard"]),
+  tags: z.array(z.string()).optional(),
+  teaser: z.string().optional()
+});
+
+export const RecipeSchema = z.object({
+  title: z.string(),
+  country: z.string(),
+  region: z.string().nullable().optional(),
+  time_min: z.number().int().nonnegative(),
+  difficulty: z.enum(["easy","medium","hard"]),
+  servings: z.number().int().positive(),
+  ingredients: z.array(z.object({
+    name: z.string(),
+    qty: z.string(),
+    alt: z.string().optional()
+  })),
+  steps: z.array(z.string()).min(1),
+  nutrition_estimate: z.object({
+    kcal_per_serv: z.number(),
+    p: z.number(), f: z.number(), c: z.number()
+  }),
+  shopping_list: z.array(z.string()),
+  restaurant_query: z.string().nullable().optional()
+});
+
+export const ExploreRequestSchema = z.object({
+  slots: z.object({
+    intent: z.enum(["explore","decide"]).optional(),
+    country: z.string().optional(),
+    region: z.string().optional(),
+    dish: z.string().optional(),
+    time_min: z.number().int().nonnegative().optional(),
+    servings: z.number().int().positive().optional(),
+    spice_level: z.number().min(0).max(3).optional(),
+    budget_level: z.number().min(1).max(3).optional(),
+    allergies: z.array(z.string()).optional(),
+    herb_ok: z.boolean().optional()
+  }),
+  context: z.object({
+    seen_ids: z.array(z.string()).optional(),
+    diversify: z.boolean().optional(),
+    serendipity: z.number().min(0).max(1).optional()
+  }).optional(),
+  limit: z.number().int().min(1).max(6).default(3)
+});
+```
+
+### API（FastAPI 例）
+
+* `POST /api/suggest/explore` → 候補3件（MMR 多様化、既視回避）
+* `POST /api/recipe` → レシピ詳細（Zod 検証）
+* `GET  /api/cuisine/brief?key=IT` or `IT-S` → 代表2品＋一言
+* `GET  /api/culture/fact?key=IT-S` → 豆知識1件
+* `POST /api/browse/view` → 既視ログ
+* `POST /api/save` / `DELETE /api/save/:id` → お気に入り
+* `POST /api/queue` / `DELETE /api/queue/:id` → 下書き
+* `GET  /api/recent` → 最近見た/保存/下書きの一覧
+* `POST /api/log/eaten` / `GET /api/log/list`
+
+**レスポンス例**
+`POST /api/suggest/explore`
+
+```json
+{
+  "candidates":[
+    {"id":"r_790","title":"アランチーニ","country":"Italy","region":"Sicily","time_min":35,"difficulty":"medium","tags":["fried","rice"],"teaser":"シチリアのライスコロッケ"},
+    {"id":"r_791","title":"ミネストローネ","country":"Italy","region":null,"time_min":25,"difficulty":"easy","tags":["soup"]},
+    {"id":"r_792","title":"カポナータ","country":"Italy","region":"South Italy","time_min":15,"difficulty":"easy","tags":["veggie","sweet-sour"]}
+  ],
+  "facets":{"similar":["veggie","fried","soup"],"opposite":["spicy","grilled"]}
+}
+```
+
+`POST /api/recipe`
+
+```json
+{
+  "title":"カポナータ",
+  "country":"Italy",
+  "region":"South Italy",
+  "time_min":15,
+  "difficulty":"easy",
+  "servings":2,
+  "ingredients":[
+    {"name":"ナス","qty":"1本","alt":"ズッキーニで代用可"},
+    {"name":"トマト缶","qty":"200g"},
+    {"name":"玉ねぎ","qty":"1/2個"},
+    {"name":"ビネガー","qty":"大さじ1","alt":"米酢+砂糖 少々"}
+  ],
+  "steps":["…"],
+  "nutrition_estimate":{"kcal_per_serv":180,"p":3,"f":10,"c":18},
+  "shopping_list":["ナス 1本","トマト缶 200g","玉ねぎ 1/2個","ビネガー"],
+  "restaurant_query": null
+}
+```
+
+---
+
+## 🧠 会話・探索アルゴリズム（実装方針）
+
+**状態**：`GREETING → GATHERING → READY → (EXPLORE|DECIDE)`
+**スロット**：不足のみ質問。3ターン以内に初回候補→以後は**無制限**で再提案。
+
+**MMR の考え方**
+
+* 類似度 = 主材料・味（辛/酸/甘/塩/旨）・技法（炒/煮/揚/焼）・地域のコサイン距離
+* スコア = 関連度（スロット一致） + プロファイル一致 - 重複ペナルティ + 新規性 + 季節ブースト
+* 最初の1件は関連度重視、2–3件目は多様性重視
+
+---
+
+## 🗺 地図/地域データ（初期シード）
+
+**主要10地域のキー例**
+
+* `IT-S`（南イタリア）：カポナータ、アランチーニ
+* `IT-N`（北イタリア）：リゾット、ポレンタ
+* `CHN-SC`（四川）：麻婆豆腐、火鍋
+* `JPN-KANSAI`（関西）：お好み焼き、肉じゃが
+* `IND-N`（北インド）：バターチキン、チャパティ
+* `TH`（タイ）：ガパオ、トムヤム
+* `MEX`（メキシコ）：タコス、ポソレ
+* `FRA-B`（バスク）：ピペラード、タルタル
+* `VNM`（ベトナム）：フォー、バインセオ
+* `KOR`（韓国）：ビビンバ、キムチチゲ
+
+**`cuisine_briefs` seed JSON（例）**
+
+```json
+[
+  {
+    "key":"IT-S",
+    "intro_text":"南イタリアですね！🍅 旨みと酸味が魅力。",
+    "sample_dishes":[{"name":"カポナータ","time_min":15},{"name":"アランチーニ","time_min":35}]
+  }
+]
+```
+
+**`culture_facts` seed JSON（例）**
+
+```json
+[
+  {"key":"IT-S","text":"カポナータは揚げ焼き野菜に甘酸っぱい味付けをする郷土料理。地方により砂糖や松の実を加えることも。","source_label":"FoodAtlas編集部","weight":1}
+]
+```
+
+---
+
+## 🔐 環境変数（Replit Secrets）
+
+* `OPENAI_API_KEY`
+* `FOODATLAS_DB_URL`（なければ SQLite）
+* `APP_BASE_URL`
+
+---
+
+## 📊 計測イベント（送信）
+
+`chat_started`, `country_set`, `region_set`, `suggest_returned`, `candidate_clicked`, `compare_tray_opened`, `recipe_generated`, `fact_shown`, `fact_opened`, `save_clicked`, `queue_added`, `log_created`
+
+---
+
+## ✅ テスト（受入チェックリスト）
+
+* [ ] “イタリアで軽め 20分” → 3件の候補が返る
+* [ ] 「もっと辛く」→ 別国/別技法も混じった多様候補が返る
+* [ ] 候補を3回以上“さらに3件”しても重複が目に見えて少ない
+* [ ] レシピJSONの Zod 検証で不正出力はUIに出さない
+* [ ] 豆知識はセッションで1回、出典が表示される
+* [ ] 国→主要地域の選択でコメントが<800ms で出る
+* [ ] 記録作成→一覧→“もう一度作る/似た料理”が機能
+* [ ] PWA：保存レシピがオフライン閲覧可
+
+---
+
+## 🗓 実装順（2週間想定）
+
+**Day 1–2**
+
+* Repo 生成、Next.js/ FastAPI 起動、`packages/schemas` 作成
+
+**Day 3–4**
+
+* `/api/suggest/explore`（ダミー→LLM 本線）
+* Chat UI + 候補カード + “さらに3件”
+
+**Day 5–6**
+
+* `/api/recipe` + Zod 検証、レシピ詳細、人数切替
+* 保存/下書き/最近見たの API & UI
+
+**Day 7–8**
+
+* `/api/cuisine/brief` `/api/culture/fact` + トースト/モーダル
+* 国→地域選択 UI（簡易） + コメント連動
+
+**Day 9–10**
+
+* マイログ（記録/一覧/再利用）
+* MMR っぽい多様化（簡易ベクトル/タグでOK）
+
+**Day 11–12**
+
+* PWA 基礎、軽量オフライン、イベント計測
+* バグ修正・軽量化
+
+---
+
+このプロンプトの要件どおりに、**最初の機能**を作ってください。
+**最優先**は「探索を無制限に楽しめること」「候補が多様に出続けること」「記録と保存で次回に繋がること」です。
