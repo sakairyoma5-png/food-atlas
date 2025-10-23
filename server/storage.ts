@@ -1,4 +1,4 @@
-// Blueprint: javascript_database
+// Blueprint: javascript_database, javascript_log_in_with_replit
 import { 
   users, 
   conversations,
@@ -8,6 +8,7 @@ import {
   regions,
   type User, 
   type InsertUser,
+  type UpsertUser,
   type Conversation,
   type InsertConversation,
   type Message,
@@ -23,8 +24,9 @@ import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations
+  // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
@@ -60,10 +62,25 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations
+  // User operations (mandatory for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
@@ -129,6 +146,13 @@ export class DatabaseStorage implements IStorage {
       .insert(messages)
       .values(insertMessage)
       .returning();
+    
+    // Update conversation's updatedAt timestamp
+    await db
+      .update(conversations)
+      .set({ updatedAt: new Date() })
+      .where(eq(conversations.id, insertMessage.conversationId));
+    
     return message;
   }
 

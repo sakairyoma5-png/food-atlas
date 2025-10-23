@@ -69,15 +69,11 @@ export default function UserMenu({ username = "料理好きユーザー", email,
           <span>設定</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            onLogout?.();
-            console.log("Logout clicked");
-          }}
-          data-testid="menu-logout"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>ログアウト</span>
+        <DropdownMenuItem asChild data-testid="menu-logout">
+          <a href="/api/logout">
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>ログアウト</span>
+          </a>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
