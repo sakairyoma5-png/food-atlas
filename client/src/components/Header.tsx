@@ -2,8 +2,18 @@ import { Globe, Moon, Sun, Bookmark, MapPin, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import UserMenu from "@/components/UserMenu";
 
-export default function Header() {
+interface HeaderProps {
+  isAuthenticated?: boolean;
+  user?: {
+    username: string;
+    email?: string;
+    avatarUrl?: string;
+  };
+}
+
+export default function Header({ isAuthenticated = false, user }: HeaderProps) {
   const [isDark, setIsDark] = useState(false);
   const [location] = useLocation();
 
@@ -27,65 +37,85 @@ export default function Header() {
             </a>
           </Link>
           
-          <nav className="hidden md:flex items-center gap-1">
-            <Link href="/">
-              <a>
-                <Button
-                  variant={isActive("/") ? "secondary" : "ghost"}
-                  size="sm"
-                  data-testid="button-explore"
-                >
-                  <Globe className="h-4 w-4 mr-2" />
-                  探索
-                </Button>
-              </a>
-            </Link>
-            <Link href="/map">
-              <a>
-                <Button
-                  variant={isActive("/map") ? "secondary" : "ghost"}
-                  size="sm"
-                  data-testid="button-map"
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  世界地図
-                </Button>
-              </a>
-            </Link>
-            <Link href="/logs">
-              <a>
-                <Button
-                  variant={isActive("/logs") ? "secondary" : "ghost"}
-                  size="sm"
-                  data-testid="button-logs"
-                >
-                  <ListChecks className="h-4 w-4 mr-2" />
-                  マイログ
-                </Button>
-              </a>
-            </Link>
-            <Link href="/logs">
-              <a>
-                <Button variant="ghost" size="sm" data-testid="button-saved">
-                  <Bookmark className="h-4 w-4 mr-2" />
-                  保存済み
-                </Button>
-              </a>
-            </Link>
-          </nav>
+          {isAuthenticated && (
+            <nav className="hidden md:flex items-center gap-1">
+              <Link href="/">
+                <a>
+                  <Button
+                    variant={isActive("/") ? "secondary" : "ghost"}
+                    size="sm"
+                    data-testid="button-explore"
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    探索
+                  </Button>
+                </a>
+              </Link>
+              <Link href="/map">
+                <a>
+                  <Button
+                    variant={isActive("/map") ? "secondary" : "ghost"}
+                    size="sm"
+                    data-testid="button-map"
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    世界地図
+                  </Button>
+                </a>
+              </Link>
+              <Link href="/logs">
+                <a>
+                  <Button
+                    variant={isActive("/logs") ? "secondary" : "ghost"}
+                    size="sm"
+                    data-testid="button-logs"
+                  >
+                    <ListChecks className="h-4 w-4 mr-2" />
+                    マイログ
+                  </Button>
+                </a>
+              </Link>
+              <Link href="/logs">
+                <a>
+                  <Button variant="ghost" size="sm" data-testid="button-saved">
+                    <Bookmark className="h-4 w-4 mr-2" />
+                    保存済み
+                  </Button>
+                </a>
+              </Link>
+            </nav>
+          )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            data-testid="button-theme-toggle"
-          >
-            {isDark ? (
-              <Sun className="h-5 w-5" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              data-testid="button-theme-toggle"
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+
+            {isAuthenticated && user ? (
+              <UserMenu
+                username={user.username}
+                email={user.email}
+                avatarUrl={user.avatarUrl}
+              />
             ) : (
-              <Moon className="h-5 w-5" />
+              <Link href="/login">
+                <a>
+                  <Button variant="default" size="sm" data-testid="button-login">
+                    ログイン
+                  </Button>
+                </a>
+              </Link>
             )}
-          </Button>
+          </div>
         </div>
       </div>
     </header>
