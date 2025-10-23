@@ -76,9 +76,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/conversations/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const conversation = await storage.getConversation(req.params.id);
       if (!conversation) {
         return res.status(404).json({ message: "Conversation not found" });
+      }
+      if (conversation.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
       }
       res.json(conversation);
     } catch (error) {
@@ -90,6 +94,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Message routes
   app.get("/api/conversations/:id/messages", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      const conversation = await storage.getConversation(req.params.id);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      if (conversation.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
       const messages = await storage.getMessagesByConversationId(req.params.id);
       res.json(messages);
     } catch (error) {
@@ -111,6 +123,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         conversation = await storage.getConversation(conversationId);
         if (!conversation) {
           return res.status(404).json({ message: "Conversation not found" });
+        }
+        // Verify conversation ownership
+        if (conversation.userId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
         }
       } else {
         conversation = await storage.createConversation({
@@ -205,9 +221,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/recipes/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const recipe = await storage.getRecipe(req.params.id);
       if (!recipe) {
         return res.status(404).json({ message: "Recipe not found" });
+      }
+      if (recipe.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
       }
       res.json(recipe);
     } catch (error) {
@@ -233,12 +253,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/recipes/:id/save", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const validatedBody = recipeSaveSchema.parse(req.body);
       const { isSaved } = validatedBody;
-      const recipe = await storage.updateRecipeSaveStatus(req.params.id, isSaved);
-      if (!recipe) {
+      
+      // Verify recipe ownership before updating
+      const existingRecipe = await storage.getRecipe(req.params.id);
+      if (!existingRecipe) {
         return res.status(404).json({ message: "Recipe not found" });
       }
+      if (existingRecipe.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const recipe = await storage.updateRecipeSaveStatus(req.params.id, isSaved);
       res.json(recipe);
     } catch (error) {
       console.error("Error updating recipe:", error);
@@ -278,6 +306,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/logs/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      
+      // Verify food log ownership before deleting
+      const existingLog = await storage.getFoodLog(req.params.id);
+      if (!existingLog) {
+        return res.status(404).json({ message: "Food log not found" });
+      }
+      if (existingLog.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
       await storage.deleteFoodLog(req.params.id);
       res.json({ success: true });
     } catch (error) {
