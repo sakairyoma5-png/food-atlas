@@ -29,29 +29,27 @@ export default function Landing() {
             あなただけの料理の旅を記録しましょう。
           </p>
           <div className="flex gap-4">
-            <Link href="/login">
-              <a>
-                <Button
-                  size="lg"
-                  variant="default"
-                  data-testid="button-get-started"
-                >
-                  今すぐ始める
-                </Button>
-              </a>
-            </Link>
-            <Link href="/login">
-              <a>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-background/10 backdrop-blur border-white/30 text-white hover:bg-background/20"
-                  data-testid="button-login-hero"
-                >
-                  ログイン
-                </Button>
-              </a>
-            </Link>
+            <Button
+              size="lg"
+              variant="default"
+              asChild
+              data-testid="button-get-started"
+            >
+              <Link href="/login">
+                今すぐ始める
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              asChild
+              className="bg-background/10 backdrop-blur border-white/30 text-white hover:bg-background/20"
+              data-testid="button-login-hero"
+            >
+              <Link href="/login">
+                ログイン
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -294,13 +292,11 @@ export default function Landing() {
           <p className="text-lg text-muted-foreground mb-8">
             無料でアカウントを作成して、世界中の料理を探索しましょう
           </p>
-          <Link href="/login">
-            <a>
-              <Button size="lg" variant="default" data-testid="button-signup-cta">
-                無料で始める
-              </Button>
-            </a>
-          </Link>
+          <Button size="lg" variant="default" asChild data-testid="button-signup-cta">
+            <Link href="/login">
+              無料で始める
+            </Link>
+          </Button>
         </div>
       </section>
 
