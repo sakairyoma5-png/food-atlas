@@ -41,9 +41,11 @@ export const regions = pgTable("regions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull().unique(),
   nameJa: text("name_ja"),
+  country: text("country"),
   continent: text("continent"),
   description: text("description"),
   culturalInfo: text("cultural_info"),
+  sampleDishes: text("sample_dishes").array(),
 });
 
 export const insertRegionSchema = createInsertSchema(regions).omit({

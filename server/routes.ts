@@ -3,7 +3,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { openai, DEFAULT_MODEL } from "./openai";
+import { openai, DEFAULT_MODEL, SYSTEM_PROMPT } from "./openai";
 import { 
   insertConversationSchema,
   insertMessageSchema,
@@ -135,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: `あなたは世界中の料理について詳しい親しみやすいAIアシスタントです。ユーザーが料理を探している場合、3ターン以内に3つの候補を提案してください。レシピの詳細を求められたら、材料、手順、調理時間、難易度、代替材料、栄養情報、文化的背景を含めて回答してください。常に日本語で回答してください。`,
+            content: SYSTEM_PROMPT,
           },
           ...messages.map(m => ({
             role: m.role as "user" | "assistant",
@@ -171,7 +171,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/recipes", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const recipes = await storage.getRecipesByUserId(userId);
+      const conversationId = req.query.conversationId as string | undefined;
+      
+      let recipes;
+      if (conversationId) {
+        // Verify conversation ownership
+        const conversation = await storage.getConversation(conversationId);
+        if (!conversation || conversation.userId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        recipes = await storage.getRecipesByConversationId(conversationId);
+      } else {
+        recipes = await storage.getRecipesByUserId(userId);
+      }
+      
       res.json(recipes);
     } catch (error) {
       console.error("Error fetching recipes:", error);
