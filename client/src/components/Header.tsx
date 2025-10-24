@@ -106,9 +106,9 @@ export default function Header({ isAuthenticated = false, user }: HeaderProps) {
               />
             ) : (
               <Button variant="default" size="sm" asChild data-testid="button-login">
-                <Link href="/login">
+                <a href="/api/login">
                   ログイン
-                </Link>
+                </a>
               </Button>
             )}
           </div>

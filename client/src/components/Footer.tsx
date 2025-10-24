@@ -1,6 +1,5 @@
 import { Globe } from "lucide-react";
 import { SiX, SiInstagram, SiFacebook } from "react-icons/si";
-import { Link } from "wouter";
 
 export default function Footer() {
   return (
@@ -21,19 +20,13 @@ export default function Footer() {
             <h3 className="font-semibold mb-4">サービス</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/login">
-                  <a className="hover:text-foreground transition-colors">料理を探す</a>
-                </Link>
+                <a href="/api/login" className="hover:text-foreground transition-colors">料理を探す</a>
               </li>
               <li>
-                <Link href="/login">
-                  <a className="hover:text-foreground transition-colors">世界地図</a>
-                </Link>
+                <a href="/api/login" className="hover:text-foreground transition-colors">世界地図</a>
               </li>
               <li>
-                <Link href="/login">
-                  <a className="hover:text-foreground transition-colors">マイログ</a>
-                </Link>
+                <a href="/api/login" className="hover:text-foreground transition-colors">マイログ</a>
               </li>
             </ul>
           </div>
