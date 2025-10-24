@@ -144,6 +144,7 @@ export default function MapView() {
   const [, setLocation] = useLocation();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+  const [rotation, setRotation] = useState([0, -30, 0]);
 
   const displayedDishes = selectedCountry && dishesbyCountry[selectedCountry]
     ? dishesbyCountry[selectedCountry]
@@ -151,6 +152,7 @@ export default function MapView() {
 
   const handleCountryClick = (geo: { properties: { name: string } }) => {
     const countryName = geo.properties.name;
+    console.log("Clicked country:", countryName);
     setSelectedCountry(countryName);
   };
 
@@ -175,16 +177,19 @@ export default function MapView() {
 
         <div className="bg-card border border-card-border rounded-lg overflow-hidden mb-8">
           <ComposableMap
-            projection="geoMercator"
+            projection="geoOrthographic"
             projectionConfig={{
-              scale: 150,
+              scale: 200,
+              rotation: rotation,
             }}
+            width={800}
+            height={600}
             style={{
               width: "100%",
               height: "auto",
             }}
           >
-            <ZoomableGroup center={[0, 20]} zoom={1}>
+            <ZoomableGroup zoom={1} minZoom={1} maxZoom={1} center={[0, 0]}>
               <Geographies geography={geoUrl}>
                 {({ geographies }: { geographies: any[] }) =>
                   geographies.map((geo: any) => {
