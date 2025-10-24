@@ -144,7 +144,8 @@ export default function MapView() {
   const [, setLocation] = useLocation();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
-  const [rotation, setRotation] = useState([0, -30, 0]);
+  // Initial rotation to show Asia/Europe region where most of our dish data is located
+  const [rotation, setRotation] = useState([30, -20, 0]);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -290,6 +291,15 @@ export default function MapView() {
               </button>
             )}
           </div>
+          
+          {selectedCountry && !dishesbyCountry[selectedCountry] && (
+            <div className="bg-muted/50 border border-muted-foreground/20 rounded-lg p-4 text-center">
+              <p className="text-muted-foreground">
+                {selectedCountry}の料理データはまだ登録されていません。
+                代わりに世界の代表的な料理を表示しています。
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayedDishes.map((dish) => (
