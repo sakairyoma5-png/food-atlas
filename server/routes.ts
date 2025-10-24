@@ -3,7 +3,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { openai, DEFAULT_MODEL, SYSTEM_PROMPT } from "./openai";
+import { openai, DEFAULT_MODEL, SYSTEM_PROMPT, extractRecipeData } from "./openai";
 import { 
   insertConversationSchema,
   insertMessageSchema,
@@ -163,16 +163,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const assistantMessage = completion.choices[0].message.content || "";
 
-      // Save assistant message
+      // Extract recipe data from assistant message
+      const { text, recipes } = extractRecipeData(assistantMessage);
+
+      // Save assistant message (text only, without JSON)
       await storage.createMessage({
         conversationId: conversation.id,
         role: "assistant",
-        content: assistantMessage,
+        content: text,
       });
+
+      // Save recipes if any were extracted
+      const savedRecipes = [];
+      for (const recipeData of recipes) {
+        try {
+          const recipe = await storage.createRecipe({
+            userId,
+            conversationId: conversation.id,
+            name: recipeData.name,
+            region: recipeData.region,
+            description: recipeData.description,
+            ingredients: recipeData.ingredients,
+            instructions: recipeData.instructions,
+            cookingTime: recipeData.cookingTime,
+            difficulty: recipeData.difficulty,
+            servings: recipeData.servings,
+            nutrition: recipeData.nutrition,
+            isSaved: false,
+          });
+          savedRecipes.push(recipe);
+        } catch (err) {
+          console.error("Failed to save recipe:", err);
+        }
+      }
 
       res.json({
         conversationId: conversation.id,
-        message: assistantMessage,
+        message: text,
+        recipes: savedRecipes,
       });
     } catch (error) {
       console.error("Error in chat completion:", error);

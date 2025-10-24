@@ -252,7 +252,10 @@ export default function Home() {
             </div>
 
             <div className="bg-card border border-card-border rounded-lg h-[500px] mb-8">
-              <ChatInterface onNewMessage={handleNewMessage} />
+              <ChatInterface 
+                onNewMessage={handleNewMessage}
+                onRecipeClick={(recipeId) => setLocation(`/recipe/${recipeId}`)}
+              />
             </div>
 
             {showRecipes && recipes.length > 0 && (
