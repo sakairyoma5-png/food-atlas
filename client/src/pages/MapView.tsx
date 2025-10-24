@@ -145,6 +145,8 @@ export default function MapView() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [rotation, setRotation] = useState([0, -30, 0]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const displayedDishes = selectedCountry && dishesbyCountry[selectedCountry]
     ? dishesbyCountry[selectedCountry]
@@ -163,6 +165,30 @@ export default function MapView() {
     console.log("Navigate to dish:", dishId);
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+
+    const deltaX = e.clientX - dragStart.x;
+    const deltaY = e.clientY - dragStart.y;
+
+    setRotation((prev) => [
+      prev[0] + deltaX * 0.5,
+      prev[1] - deltaY * 0.5,
+      prev[2],
+    ]);
+
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -175,13 +201,20 @@ export default function MapView() {
           </p>
         </div>
 
-        <div className="bg-card border border-card-border rounded-lg overflow-hidden mb-8">
+        <div 
+          className="bg-card border border-card-border rounded-lg overflow-hidden mb-8"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        >
           <ComposableMap
             projection="geoOrthographic"
             projectionConfig={{
               scale: 200,
-              rotation: rotation,
-            }}
+              rotate: rotation as [number, number, number],
+            } as any}
             width={800}
             height={600}
             style={{
