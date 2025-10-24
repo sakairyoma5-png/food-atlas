@@ -35,9 +35,9 @@ export default function Landing() {
               asChild
               data-testid="button-get-started"
             >
-              <Link href="/login">
+              <a href="/api/login">
                 今すぐ始める
-              </Link>
+              </a>
             </Button>
             <Button
               size="lg"
@@ -46,9 +46,9 @@ export default function Landing() {
               className="bg-background/10 backdrop-blur border-white/30 text-white hover:bg-background/20"
               data-testid="button-login-hero"
             >
-              <Link href="/login">
+              <a href="/api/login">
                 ログイン
-              </Link>
+              </a>
             </Button>
           </div>
         </div>
@@ -293,9 +293,9 @@ export default function Landing() {
             無料でアカウントを作成して、世界中の料理を探索しましょう
           </p>
           <Button size="lg" variant="default" asChild data-testid="button-signup-cta">
-            <Link href="/login">
+            <a href="/api/login">
               無料で始める
-            </Link>
+            </a>
           </Button>
         </div>
       </section>
