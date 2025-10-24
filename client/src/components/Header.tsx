@@ -1,4 +1,4 @@
-import { Globe, Moon, Sun, Bookmark, MapPin, ListChecks } from "lucide-react";
+import { Globe, Moon, Sun, Bookmark, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -46,17 +46,6 @@ export default function Header({ isAuthenticated = false, user }: HeaderProps) {
                 <Link href="/">
                   <Globe className="h-4 w-4 mr-2" />
                   探索
-                </Link>
-              </Button>
-              <Button
-                variant={isActive("/map") ? "secondary" : "ghost"}
-                size="sm"
-                asChild
-                data-testid="button-map"
-              >
-                <Link href="/map">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  世界地図
                 </Link>
               </Button>
               <Button
