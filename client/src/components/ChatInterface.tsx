@@ -6,23 +6,28 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import RecipeCard from "@/components/RecipeCard";
+import type { Recipe } from "@shared/schema";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  recipes?: Recipe[];
 }
 
 interface ChatInterfaceProps {
   conversationId?: string;
   initialMessages?: Message[];
   onNewMessage?: (conversationId: string, message: string) => void;
+  onRecipeClick?: (recipeId: string) => void;
 }
 
 export default function ChatInterface({ 
   conversationId: propConversationId, 
   initialMessages = [],
   onNewMessage,
+  onRecipeClick,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
@@ -40,7 +45,7 @@ export default function ChatInterface({
         }
       );
       const data = await response.json();
-      return data as { conversationId: string; message: string };
+      return data as { conversationId: string; message: string; recipes?: Recipe[] };
     },
     onSuccess: (data) => {
       setConversationId(data.conversationId);
@@ -49,6 +54,7 @@ export default function ChatInterface({
         id: `assistant-${Date.now()}`,
         role: "assistant",
         content: data.message,
+        recipes: data.recipes,
       };
       
       setMessages((prev) => [...prev, assistantMessage]);
@@ -101,35 +107,56 @@ export default function ChatInterface({
         )}
         
         {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            {message.role === "assistant" && (
-              <Avatar className="h-8 w-8 mt-1">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  <Globe className="h-4 w-4" />
-                </AvatarFallback>
-              </Avatar>
-            )}
-            
+          <div key={message.id} className="space-y-3">
             <div
-              className={`rounded-2xl px-4 py-3 max-w-[80%] ${
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card border border-card-border"
-              }`}
-              data-testid={`message-${message.role}`}
+              className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              {message.role === "assistant" && (
+                <Avatar className="h-8 w-8 mt-1">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    <Globe className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              
+              <div
+                className={`rounded-2xl px-4 py-3 max-w-[80%] ${
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-card-border"
+                }`}
+                data-testid={`message-${message.role}`}
+              >
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              </div>
+              
+              {message.role === "user" && (
+                <Avatar className="h-8 w-8 mt-1">
+                  <AvatarFallback className="bg-secondary">
+                    <span className="text-xs font-medium">You</span>
+                  </AvatarFallback>
+                </Avatar>
+              )}
             </div>
             
-            {message.role === "user" && (
-              <Avatar className="h-8 w-8 mt-1">
-                <AvatarFallback className="bg-secondary">
-                  <span className="text-xs font-medium">You</span>
-                </AvatarFallback>
-              </Avatar>
+            {message.role === "assistant" && message.recipes && message.recipes.length > 0 && (
+              <div className="ml-11 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {message.recipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    id={recipe.id}
+                    title={recipe.name}
+                    country={recipe.region}
+                    region={recipe.region}
+                    timeMin={recipe.cookingTime || 30}
+                    difficulty={(recipe.difficulty as "easy" | "medium" | "hard") || "medium"}
+                    tags={[recipe.difficulty || "medium"]}
+                    teaser={recipe.description || ""}
+                    imageUrl={recipe.imageUrl || undefined}
+                    onViewDetail={() => onRecipeClick?.(recipe.id)}
+                  />
+                ))}
+              </div>
             )}
           </div>
         ))}
