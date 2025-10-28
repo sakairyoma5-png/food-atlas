@@ -1,196 +1,34 @@
 # Food Atlas
 
-会話で探す、世界中の料理。AIとの対話を通じて料理を発見し、レシピを学び、調理体験を記録するWebアプリケーション。
+## Overview
 
-## プロジェクト概要
+Food Atlas is a web application designed to allow users to explore global cuisine through AI-driven conversation. Users can discover recipes, learn cooking techniques, and log their culinary experiences. The project aims to provide a rich, interactive platform for food enthusiasts, with future ambitions to integrate meal planning, ingredient purchasing, and restaurant reservations. It seeks to combine the aesthetics of popular platforms like Tasty, Airbnb, and Duolingo.
 
-**コンセプト**: ユーザーがAIと会話しながら世界中の料理を探索し、レシピの詳細を学び、調理や食事の体験をログとして記録できるサービス。
-
-**主な機能**:
-- AIチャット機能で料理を探索（3ターン以内に3つの候補を提示、無制限の絞り込み）
-- レシピ詳細表示（代替材料、栄養情報含む）
-- 世界地図から地域を選択
-- 文化的な豆知識の表示
-- 調理・食事体験のログ記録
-
-**将来の拡張予定**:
-- 食事計画機能
-- 食材購入連携
-- レストラン予約
-- 季節の食材フォーラム
-- ネイティブアプリ移行
-
-## 技術スタック
-
-- **フロントエンド**: React + TypeScript + Vite + Wouter + TailwindCSS + shadcn/ui
-- **バックエンド**: Express + Node.js
-- **データベース**: PostgreSQL (Neon)
-- **AI**: OpenAI API (Replit統合)
-- **認証**: Replit Auth
-- **デザイン**: Playfair Display（見出し）、Inter（本文）、Caveat（手書き風）
-
-## デザインシステム
-
-**カラーパレット**（食をテーマにした温かみのある配色）:
-- Primary: オリーブグリーン系
-- Secondary: テラコッタオレンジ
-- Accent: ゴールデンイエロー
-- Background: クリーム/ベージュ系
-
-**参考デザイン**: Tasty + Airbnb + Duolingoの美学
-
-## プロジェクト構成
-
-### フロントエンド（完成）
-- `client/src/pages/`: Landing, Login, Home, MapView, MyLogs, RecipeDetailPage
-- `client/src/components/`: Header, Footer, ChatInterface, RecipeCard, RecipeDetail, RegionSelector, FoodLogCard, ComparisonTray, CulturalFactToast, QuickActionChips
-
-### バックエンド（実装中）
-- `server/routes.ts`: APIルート
-- `server/storage.ts`: ストレージインターフェース
-- `shared/schema.ts`: データスキーマ
-
-## 現在の実装状態
-
-### 完了
-- ✅ デザインガイドライン作成
-- ✅ UIコンポーネントライブラリ構築
-- ✅ 全ページのフロントエンド実装
-- ✅ ランディングページの完成（会話デモ、レシピ例、文化的豆知識セクション含む）
-- ✅ フッターコンポーネント（SNSアイコン付き）
-- ✅ データスキーマ設計（会話、メッセージ、レシピ、ログ、地域）
-- ✅ PostgreSQLデータベースセットアップ（21地域のシードデータ含む）
-- ✅ バックエンドAPI実装（認証、会話、レシピ、ログ、地域）
-- ✅ OpenAI統合（GPT-5-mini、Replit AI Integrations）
-- ✅ 認証システム（Replit Auth、セッション管理）
-- ✅ フロントエンド・バックエンド統合
-- ✅ セキュリティ検証（会話所有権チェック、リクエストボディ検証）
-- ✅ ブラウザエラー修正（<a>タグの入れ子問題解決）
-- ✅ AI会話からのレシピ自動抽出・保存機能（JSON形式でのレシピデータ取得、自動DB保存）
-- ✅ チャットインターフェースでレシピカード表示（カードタップで詳細ページへ遷移）
-- ✅ RecipeDetailPageからフードログ作成機能（タイプ、評価、メモ入力）
-- ✅ 世界地図ページの完全実装（react-simple-maps使用、地球儀表示、国選択機能）
-- ✅ エンドツーエンドテスト（チャット、地図、フードログ機能の動作確認）
-
-### 未実装
-- ⏳ レシピ手動保存・管理機能
-- ⏳ 地域情報取得API
-- ⏳ 文化的豆知識システム
-- ⏳ レシピの代替材料提案
-- ⏳ 栄養情報計算
-- ⏳ 地図からレシピ詳細ページへの直接遷移（現在はモックデータのためホームへリダイレクト）
-
-## 最近の変更
-
-### 2025-10-24（深夜2）
-- **料理画像の完全置き換え**：
-  - 96個の料理すべてのプレースホルダー画像を、本物の料理写真（ストック画像）に置き換え
-  - 87個のユニークな料理写真を使用（一部の料理は同じ画像を共有）
-  - MapView.tsxに96個の画像インポートを追加し、各料理の`imageUrl`フィールドを更新
-  - Architectレビュー完了：すべての画像が正しく参照され、インポート名とファイルパスの一貫性が保たれていることを確認
-  - Playwrightテストで検証：イタリア、タイ、日本、アメリカの料理カードの画像が正しく表示されることを確認
-  - すべての画像が正常に読み込まれることを確認（naturalWidth > 0）
-
-### 2025-10-24（深夜）
-- **世界規模の料理データ拡張**：
-  - 地球儀で選択できる国を17カ国から48カ国に大幅拡張（合計96の料理データ）
-  - 追加した31カ国：インドネシア、マレーシア、フィリピン、パキスタン、イラン、サウジアラビア、イギリス、ドイツ、ロシア、ポルトガル、オランダ、スウェーデン、ポーランド、オーストリア、ベルギー、カナダ、ペルー、コロンビア、チリ、ジャマイカ、ナイジェリア、南アフリカ、エジプト、ケニア、オーストラリア、ニュージーランド、レバノン、イスラエル
-  - 地域バランス：アジア12カ国、ヨーロッパ14カ国、南北アメリカ9カ国、アフリカ6カ国、オセアニア2カ国、中東5カ国
-  - 各国の代表的な料理を2つずつ、日本語名、調理時間、カロリー、難易度とともに実装
-  - Architectレビュー完了、Natural Earth命名規則との互換性を確認
-
-### 2025-10-24（夜）
-- **料理データの大幅拡大**：
-  - 地球儀で選択できる国を6カ国から17カ国に拡張（合計34の料理データ）
-  - 追加した11カ国：中国、韓国、ベトナム、スペイン、ギリシャ、トルコ、アメリカ、ブラジル、アルゼンチン、モロッコ、エチオピア
-  - 各国に2つの料理データ（料理名、地域、説明、調理時間、カロリー、難易度）
-  - 地域バランス：アジア6カ国、ヨーロッパ5カ国、南北アメリカ4カ国、アフリカ2カ国
-  - Playwrightテストで各国の料理表示を確認
-
-### 2025-10-24（夕方）
-- **地図から地球儀への変更**：
-  - projectionをgeoMercatorからgeoOrthographic（地球儀）に変更
-  - ズーム機能を無効化（minZoom=1、maxZoom=1）してスクロール時の縮小問題を解決
-  - ドラッグで地球儀を回転させる機能を実装（マウスイベントハンドラー追加）
-  - 初期回転を[30, -20, 0]に設定してアジア・ヨーロッパ地域を表示
-  - 選択した国に料理データがない場合の明示的なフィードバックメッセージを追加
-  - カーソルスタイルをgrab/grabbingに変更
-  - Playwrightテストで地球儀機能の動作を確認
-
-### 2025-10-24（午後）
-- **AIチャット機能の大幅強化**：
-  - OpenAIシステムプロンプトを修正し、料理提案時に`===RECIPE_DATA===`マーカーで区切られたJSON形式のレシピデータを返すよう指示
-  - extractRecipeData関数を実装してAI応答からレシピデータを自動抽出
-  - チャット完了時にレシピを自動的にデータベースに保存する機能を追加
-  - ChatInterfaceコンポーネントを改修し、レシピカードを会話中に表示（画像、名前、地域、説明、時間、カロリー、難易度）
-  - レシピカードをタップすると詳細ページへ遷移
-- **フードログ作成機能**：
-  - RecipeDetailPageに「マイログに登録」ボタンを追加
-  - ダイアログでログタイプ（調理/食事）、評価（1-5）、メモ、日付を入力可能
-  - フードログ作成APIを呼び出してデータベースに保存
-- **世界地図ページの完全実装**：
-  - react-simple-mapsライブラリを使用して地球儀風の世界地図を表示
-  - 国をクリックするとその国の代表的な料理カードを表示（モックデータ）
-  - デフォルト状態で世界の代表的な料理カード6つを表示（タイ、イタリア、日本、メキシコ、インド、フランス）
-  - 料理カードのデザインはホームページと統一
-- **エンドツーエンドテスト**：
-  - Playwright使用したe2eテストを実施
-  - チャット機能、地図機能、フードログ作成機能の動作を確認
-  - すべてのテストが成功し、アプリケーションが正常に動作することを確認
-
-### 2025-10-24（午前）
-- 探索ページUI改善：
-  - ホームページに探索方法選択UI追加（チャットで探す/地図から探す）
-  - おすすめ料理カードセクション追加（画像、名前、地域、一言、調理時間、カロリー表示）
-  - ヘッダーから「世界地図」ボタンを削除
-  - 探索方法に応じた動的UI切り替え（チャット表示/地図遷移）
-- ログイン404エラーの修正：
-  - すべてのログインリンクを`/login`から`/api/login`に変更
-  - Landing、Header、Footerコンポーネントの修正
-  - Footer内の<a>入れ子問題を解消
-  - 未使用のwouterインポートを削除
-- フードログ削除エンドポイントのセキュリティ強化（所有権検証追加）
-
-### 2025-10-23
-- フッターコンポーネントを追加（サービスリンク、サポート、法的情報、SNSアイコン）
-- SNSアイコン（X, Instagram, Facebook）を実装
-- データスキーマの完成（会話、メッセージ、レシピ、ログ、地域）
-- PostgreSQLデータベースのセットアップと初期化（21地域のシードデータ含む）
-- 全バックエンドAPIエンドポイントの実装
-- OpenAI GPT-5-miniとの統合（Replit AI Integrations使用）
-- Replit Authによる認証フローの実装（セッション管理含む）
-- フロントエンド・バックエンドの完全統合
-- セキュリティ強化：
-  - 会話、メッセージ、レシピ、フードログの所有権検証
-  - すべての認証済みエンドポイントで403/404エラーハンドリング
-  - リクエストボディ検証（Zod使用）
-- ブラウザコンソールエラーの完全修正（Header、LandingページのLink/Button構造修正）
-- クエリパラメータサポートの追加（lib/queryClient.ts）
-
-## ユーザー設定
+## User Preferences
 
 - 言語: 日本語
 - 認証方式: Replit Auth（Google、GitHub、メール/パスワード）
 - データ永続化: PostgreSQLデータベース使用
 - AI統合: Replit AI Integrationsを使用（APIキー不要、Replitクレジットで課金）
 
-## 注意事項
+## System Architecture
 
-- 認証: Replit Authを使用（Google、GitHub、Apple、X、メール/パスワード対応）
-- データベース: PostgreSQLデータベースを使用（Neon-backed）
-- セキュリティ: すべてのAPIエンドポイントで所有権検証を実装済み
-- レシピ保存: AI会話からのレシピ自動保存機能が実装済み（`===RECIPE_DATA===`マーカーを使用）
-- 会話履歴: 会話の再開機能は未実装（将来の拡張予定）
-- 地図機能: 現在はモックデータを使用。料理カードをクリックするとホームページへリダイレクト（実際のレシピIDが必要）
+The application is built with a modern web stack:
 
-## 次のステップ
+-   **Frontend**: React, TypeScript, Vite, Wouter for routing, TailwindCSS for styling, and shadcn/ui for UI components.
+    -   **UI/UX**: Features a warm, food-themed color palette (Olive Green, Terracotta Orange, Golden Yellow, Cream/Beige). Uses Playfair Display for headings, Inter for body text, and Caveat for a handwritten feel.
+    -   **Key Features**: AI chat for recipe exploration, recipe detail pages (including affiliate links), an interactive world map for regional selection, and a food logging system.
+-   **Backend**: Express.js with Node.js. Handles API routes, authentication, and data persistence.
+-   **Database**: PostgreSQL, hosted on Neon.
+-   **AI**: OpenAI API (GPT-5-mini) integrated via Replit AI Integrations for conversational capabilities and meal plan generation.
+-   **Authentication**: Replit Auth for user management and session handling.
+-   **Monetization**: Implemented through affiliate links on recipe pages and a premium subscription model for advanced features like budget-based meal plan generation.
 
-1. レシピ手動保存機能の追加
-   - チャットインターフェースに「保存」ボタン追加
-   - 保存済みレシピページの実装
-2. 地域情報取得APIの実装
-3. 文化的豆知識システムの実装
-4. 地図からレシピ詳細ページへの直接遷移
-   - 実際のレシピIDを使用した料理データの取得
-   - 料理カードのリンク先をレシピ詳細ページに変更
-5. パフォーマンス最適化
+## External Dependencies
+
+-   **OpenAI API**: Used for AI chat functionality (recipe discovery, meal plan generation).
+-   **PostgreSQL (Neon)**: Primary database for all application data.
+-   **Replit Auth**: Authentication service for user login.
+-   **react-simple-maps**: Library for rendering the interactive world map.
+-   **Stripe**: Planned integration for payment processing for premium subscriptions.
+-   **Amazon & Rakuten**: Integrated for affiliate links on recipe detail pages.
