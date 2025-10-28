@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Globe, MapPin, BookOpen, ListChecks, Sparkles, Clock, ChefHat, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
 import Footer from "@/components/Footer";
+import ComingSoonSection from "@/components/ComingSoonSection";
 import heroImg from "@assets/generated_images/International_dishes_overhead_shot_05962886.png";
 import caponataImg from "@assets/generated_images/Italian_caponata_dish_c8849bba.png";
 import thaiImg from "@assets/generated_images/Thai_basil_stir-fry_dish_cacb8d40.png";
@@ -282,6 +283,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Coming Soon Section */}
+      <ComingSoonSection />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-b from-primary/5 to-background">

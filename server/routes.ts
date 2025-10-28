@@ -3,12 +3,13 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { openai, DEFAULT_MODEL, SYSTEM_PROMPT, extractRecipeData } from "./openai";
+import { openai, DEFAULT_MODEL, SYSTEM_PROMPT, extractRecipeData, generateMealPlan } from "./openai";
 import { 
   insertConversationSchema,
   insertMessageSchema,
   insertRecipeSchema,
   insertFoodLogSchema,
+  insertMealPlanSchema,
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -374,6 +375,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching region:", error);
       res.status(500).json({ message: "Failed to fetch region" });
+    }
+  });
+
+  // Meal plan routes
+  app.get("/api/meal-plans", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const mealPlans = await storage.getMealPlansByUserId(userId);
+      res.json(mealPlans);
+    } catch (error) {
+      console.error("Error fetching meal plans:", error);
+      res.status(500).json({ message: "Failed to fetch meal plans" });
+    }
+  });
+
+  app.get("/api/meal-plans/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const mealPlan = await storage.getMealPlan(req.params.id);
+      if (!mealPlan) {
+        return res.status(404).json({ message: "Meal plan not found" });
+      }
+      if (mealPlan.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      res.json(mealPlan);
+    } catch (error) {
+      console.error("Error fetching meal plan:", error);
+      res.status(500).json({ message: "Failed to fetch meal plan" });
+    }
+  });
+
+  app.post("/api/meal-plans/generate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { budget, preferences, startDate, endDate } = req.body;
+
+      if (!budget || budget <= 0) {
+        return res.status(400).json({ message: "Invalid budget" });
+      }
+
+      // Check if user has premium access for this feature
+      const subscription = await storage.getUserSubscription(userId);
+      const isPremium = subscription?.plan === "premium" && subscription?.status === "active";
+
+      // Enforce premium requirement for meal plan generation
+      if (!isPremium) {
+        return res.status(403).json({ 
+          message: "この機能はプレミアムプラン限定です",
+          requiresPremium: true,
+        });
+      }
+
+      // Generate meal plan using OpenAI
+      const generatedPlan = await generateMealPlan(budget, preferences);
+
+      // Calculate dates if not provided
+      const start = startDate ? new Date(startDate) : new Date();
+      const end = endDate ? new Date(endDate) : new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+      // Save meal plan to database
+      const mealPlanData = {
+        userId,
+        title: `${budget.toLocaleString()}円の月間献立プラン`,
+        budget,
+        startDate: start,
+        endDate: end,
+        recipes: generatedPlan.recipes || [],
+        shoppingList: generatedPlan.shoppingList || [],
+        totalEstimatedCost: generatedPlan.estimatedCost || budget,
+        notes: generatedPlan.tips || "",
+        isPremium,
+      };
+
+      const validation = insertMealPlanSchema.safeParse(mealPlanData);
+      
+      if (!validation.success) {
+        console.error("Meal plan validation failed:", validation.error.errors);
+        console.error("Generated data:", JSON.stringify(generatedPlan, null, 2));
+        return res.status(400).json({ 
+          message: "献立プランの生成に失敗しました。もう一度お試しください。", 
+          errors: validation.error.errors 
+        });
+      }
+
+      const mealPlan = await storage.createMealPlan(validation.data);
+
+      res.json(mealPlan);
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "献立プランの生成に失敗しました" });
+    }
+  });
+
+  app.delete("/api/meal-plans/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Verify meal plan ownership before deleting
+      const existingPlan = await storage.getMealPlan(req.params.id);
+      if (!existingPlan) {
+        return res.status(404).json({ message: "Meal plan not found" });
+      }
+      if (existingPlan.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await storage.deleteMealPlan(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting meal plan:", error);
+      res.status(500).json({ message: "Failed to delete meal plan" });
+    }
+  });
+
+  // User subscription routes
+  app.get("/api/subscription", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      let subscription = await storage.getUserSubscription(userId);
+      
+      // Create default free subscription if it doesn't exist
+      if (!subscription) {
+        subscription = await storage.createUserSubscription({
+          userId,
+          plan: "free",
+          status: "active",
+        });
+      }
+      
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+      res.status(500).json({ message: "Failed to fetch subscription" });
     }
   });
 

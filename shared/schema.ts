@@ -159,3 +159,75 @@ export const insertFoodLogSchema = createInsertSchema(foodLogs).omit({
 
 export type InsertFoodLog = z.infer<typeof insertFoodLogSchema>;
 export type FoodLog = typeof foodLogs.$inferSelect;
+
+// User subscription plans
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  plan: text("plan").notNull().default("free"), // "free", "premium"
+  status: text("status").notNull().default("active"), // "active", "cancelled", "expired"
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+});
+
+export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+
+// Meal plans schema
+const mealPlanRecipeSchema = z.object({
+  recipeId: z.string().optional(),
+  name: z.string(),
+  region: z.string(),
+  date: z.string(), // ISO date
+  mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]),
+  estimatedCost: z.number().optional(),
+});
+
+const shoppingListItemSchema = z.object({
+  ingredient: z.string(),
+  quantity: z.string().optional(),
+  estimatedCost: z.number().optional(),
+  category: z.string().optional(), // "vegetables", "meat", "spices", etc.
+  affiliateLink: z.string().optional(),
+});
+
+export type MealPlanRecipe = z.infer<typeof mealPlanRecipeSchema>;
+export type ShoppingListItem = z.infer<typeof shoppingListItemSchema>;
+
+export const mealPlans = pgTable("meal_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  budget: integer("budget").notNull(), // Monthly budget in yen
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  recipes: jsonb("recipes").$type<MealPlanRecipe[]>().notNull(),
+  shoppingList: jsonb("shopping_list").$type<ShoppingListItem[]>(),
+  totalEstimatedCost: integer("total_estimated_cost"),
+  notes: text("notes"),
+  isPremium: boolean("is_premium").default(false).notNull(), // Premium feature flag
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+});
+
+export const insertMealPlanSchema = createInsertSchema(mealPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  recipes: z.array(mealPlanRecipeSchema),
+  shoppingList: z.array(shoppingListItemSchema).optional(),
+});
+
+export type InsertMealPlan = z.infer<typeof insertMealPlanSchema>;
+export type MealPlan = typeof mealPlans.$inferSelect;

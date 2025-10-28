@@ -1,4 +1,4 @@
-import { Globe, Moon, Sun, Bookmark, ListChecks } from "lucide-react";
+import { Globe, Moon, Sun, Bookmark, ListChecks, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -57,6 +57,17 @@ export default function Header({ isAuthenticated = false, user }: HeaderProps) {
                 <Link href="/logs">
                   <ListChecks className="h-4 w-4 mr-2" />
                   マイログ
+                </Link>
+              </Button>
+              <Button
+                variant={isActive("/meal-plans") ? "secondary" : "ghost"}
+                size="sm"
+                asChild
+                data-testid="button-meal-plans"
+              >
+                <Link href="/meal-plans">
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  献立プラン
                 </Link>
               </Button>
               <Button 

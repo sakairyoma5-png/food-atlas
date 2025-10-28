@@ -6,6 +6,8 @@ import {
   recipes,
   foodLogs,
   regions,
+  mealPlans,
+  userSubscriptions,
   type User, 
   type InsertUser,
   type UpsertUser,
@@ -19,6 +21,10 @@ import {
   type InsertFoodLog,
   type Region,
   type InsertRegion,
+  type MealPlan,
+  type InsertMealPlan,
+  type UserSubscription,
+  type InsertUserSubscription,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -60,6 +66,17 @@ export interface IStorage {
   getRegionByName(name: string): Promise<Region | undefined>;
   getAllRegions(): Promise<Region[]>;
   createRegion(region: InsertRegion): Promise<Region>;
+
+  // Meal plan operations
+  getMealPlan(id: string): Promise<MealPlan | undefined>;
+  getMealPlansByUserId(userId: string): Promise<MealPlan[]>;
+  createMealPlan(mealPlan: InsertMealPlan): Promise<MealPlan>;
+  deleteMealPlan(id: string): Promise<void>;
+
+  // User subscription operations
+  getUserSubscription(userId: string): Promise<UserSubscription | undefined>;
+  createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription>;
+  updateUserSubscription(userId: string, data: Partial<UserSubscription>): Promise<UserSubscription | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -251,6 +268,58 @@ export class DatabaseStorage implements IStorage {
       .values(insertRegion)
       .returning();
     return region;
+  }
+
+  // Meal plan operations
+  async getMealPlan(id: string): Promise<MealPlan | undefined> {
+    const [mealPlan] = await db.select().from(mealPlans).where(eq(mealPlans.id, id));
+    return mealPlan || undefined;
+  }
+
+  async getMealPlansByUserId(userId: string): Promise<MealPlan[]> {
+    return db
+      .select()
+      .from(mealPlans)
+      .where(eq(mealPlans.userId, userId))
+      .orderBy(desc(mealPlans.createdAt));
+  }
+
+  async createMealPlan(insertMealPlan: InsertMealPlan): Promise<MealPlan> {
+    const [mealPlan] = await db
+      .insert(mealPlans)
+      .values(insertMealPlan)
+      .returning();
+    return mealPlan;
+  }
+
+  async deleteMealPlan(id: string): Promise<void> {
+    await db.delete(mealPlans).where(eq(mealPlans.id, id));
+  }
+
+  // User subscription operations
+  async getUserSubscription(userId: string): Promise<UserSubscription | undefined> {
+    const [subscription] = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.userId, userId));
+    return subscription || undefined;
+  }
+
+  async createUserSubscription(insertSubscription: InsertUserSubscription): Promise<UserSubscription> {
+    const [subscription] = await db
+      .insert(userSubscriptions)
+      .values(insertSubscription)
+      .returning();
+    return subscription;
+  }
+
+  async updateUserSubscription(userId: string, data: Partial<UserSubscription>): Promise<UserSubscription | undefined> {
+    const [subscription] = await db
+      .update(userSubscriptions)
+      .set(data)
+      .where(eq(userSubscriptions.userId, userId))
+      .returning();
+    return subscription || undefined;
   }
 }
 

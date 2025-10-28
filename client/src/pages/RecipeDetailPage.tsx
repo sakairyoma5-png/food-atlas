@@ -1,4 +1,5 @@
 import RecipeDetail from "@/components/RecipeDetail";
+import AffiliateLinksSection from "@/components/AffiliateLinksSection";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookMarked } from "lucide-react";
 import { useLocation, useParams } from "wouter";
@@ -161,6 +162,14 @@ export default function RecipeDetailPage() {
           }}
           imageUrl={recipe.imageUrl || undefined}
         />
+
+        <div className="mt-8">
+          <AffiliateLinksSection
+            recipeName={recipe.name}
+            ingredients={recipe.ingredients}
+            region={recipe.region}
+          />
+        </div>
       </div>
 
       <Dialog open={showLogDialog} onOpenChange={setShowLogDialog}>
