@@ -10,6 +10,7 @@ import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import MapView from "@/pages/MapView";
 import MyLogs from "@/pages/MyLogs";
+import MealPlans from "@/pages/MealPlans";
 import RecipeDetailPage from "@/pages/RecipeDetailPage";
 import NotFound from "@/pages/not-found";
 
@@ -27,6 +28,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/map" component={MapView} />
           <Route path="/logs" component={MyLogs} />
+          <Route path="/meal-plans" component={MealPlans} />
           <Route path="/recipe/:id" component={RecipeDetailPage} />
         </>
       )}
