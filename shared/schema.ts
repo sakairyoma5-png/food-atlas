@@ -165,11 +165,13 @@ export const userSubscriptions = pgTable("user_subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
   plan: text("plan").notNull().default("free"), // "free", "premium"
-  status: text("status").notNull().default("active"), // "active", "cancelled", "expired"
+  status: text("status").notNull().default("active"), // "active", "cancelled", "expired", "past_due", "unpaid"
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   currentPeriodStart: timestamp("current_period_start"),
   currentPeriodEnd: timestamp("current_period_end"),
+  gracePeriodEnd: timestamp("grace_period_end"), // 10 days after payment failure
+  lastPaymentDate: timestamp("last_payment_date"), // Last successful payment
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });

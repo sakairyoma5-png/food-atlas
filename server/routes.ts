@@ -10,8 +10,50 @@ import {
   insertRecipeSchema,
   insertFoodLogSchema,
   insertMealPlanSchema,
+  type UserSubscription,
 } from "@shared/schema";
 import { z } from "zod";
+
+// Helper function to update subscription status based on payment lifecycle
+async function updateSubscriptionStatus(
+  userId: string, 
+  subscription: UserSubscription | undefined
+): Promise<UserSubscription | undefined> {
+  if (!subscription || subscription.plan !== "premium" || !subscription.currentPeriodEnd) {
+    return subscription;
+  }
+
+  const now = new Date();
+  const periodEnd = new Date(subscription.currentPeriodEnd);
+  
+  // If payment period has not ended, return as-is
+  if (now <= periodEnd) {
+    return subscription;
+  }
+
+  // If not already in past_due or unpaid status, set to past_due and start grace period
+  if (subscription.status === "active") {
+    const gracePeriodEnd = new Date(periodEnd);
+    gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 10); // 10 days grace period
+    
+    return await storage.updateUserSubscription(userId, {
+      status: "past_due",
+      gracePeriodEnd,
+    }) || subscription;
+  }
+  
+  // If grace period has ended, set to unpaid
+  if (subscription.status === "past_due" && subscription.gracePeriodEnd) {
+    const graceEnd = new Date(subscription.gracePeriodEnd);
+    if (now > graceEnd) {
+      return await storage.updateUserSubscription(userId, {
+        status: "unpaid",
+      }) || subscription;
+    }
+  }
+
+  return subscription;
+}
 
 // Validation schemas for API endpoints
 const chatCompletionSchema = z.object({
@@ -416,15 +458,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid budget" });
       }
 
-      // Check if user has premium access for this feature
-      const subscription = await storage.getUserSubscription(userId);
-      const isPremium = subscription?.plan === "premium" && subscription?.status === "active";
+      // Get and update subscription status BEFORE checking premium access
+      let subscription = await storage.getUserSubscription(userId);
+      subscription = await updateSubscriptionStatus(userId, subscription);
+
+      // NOW check premium access with updated status
+      const isPremium = subscription?.plan === "premium" && 
+        (subscription?.status === "active" || subscription?.status === "past_due");
 
       // Enforce premium requirement for meal plan generation
-      if (!isPremium) {
+      // unpaid status users cannot access premium features
+      if (!isPremium || subscription?.status === "unpaid") {
+        const message = subscription?.status === "unpaid" 
+          ? "お支払いが完了していないため、プレミアム機能をご利用いただけません" 
+          : "この機能はプレミアムプラン限定です";
+        
         return res.status(403).json({ 
-          message: "この機能はプレミアムプラン限定です",
+          message,
           requiresPremium: true,
+          status: subscription?.status,
         });
       }
 
@@ -507,6 +559,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: "active",
         });
       }
+      
+      // Update payment status for premium subscriptions
+      subscription = await updateSubscriptionStatus(userId, subscription);
       
       res.json(subscription);
     } catch (error) {
