@@ -118,6 +118,31 @@ export default function MealPlans() {
     },
   });
 
+  // Upgrade to premium mutation
+  const upgradeToPremiumMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/subscription/upgrade");
+      if (!response.ok) {
+        throw new Error("プレミアムプランへのアップグレードに失敗しました");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "成功",
+        description: "プレミアムプランにアップグレードしました",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "エラー",
+        description: error.message || "プレミアムプランへのアップグレードに失敗しました",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreate = () => {
     createMealPlanMutation.mutate();
   };
@@ -126,6 +151,10 @@ export default function MealPlans() {
     if (confirm("この献立プランを削除しますか？")) {
       deleteMealPlanMutation.mutate(id);
     }
+  };
+
+  const handleUpgradeToPremium = () => {
+    upgradeToPremiumMutation.mutate();
   };
 
   return (
@@ -184,8 +213,20 @@ export default function MealPlans() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="default" data-testid="button-upgrade-premium">
-                プレミアムプランにアップグレード
+              <Button 
+                variant="default" 
+                data-testid="button-upgrade-premium"
+                onClick={handleUpgradeToPremium}
+                disabled={upgradeToPremiumMutation.isPending}
+              >
+                {upgradeToPremiumMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    アップグレード中...
+                  </>
+                ) : (
+                  "プレミアムプランにアップグレード"
+                )}
               </Button>
             </CardContent>
           </Card>
