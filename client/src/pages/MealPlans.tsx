@@ -16,8 +16,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, DollarSign, ShoppingCart, Trash2, Loader2, Plus, Lock } from "lucide-react";
+import { Calendar, DollarSign, ShoppingCart, Trash2, Loader2, Plus, Lock, AlertTriangle, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 
@@ -32,7 +33,10 @@ export default function MealPlans() {
     queryKey: ["/api/subscription"],
   });
 
-  const isPremium = subscription?.plan === "premium" && subscription?.status === "active";
+  const isPremium = subscription?.plan === "premium" && 
+    (subscription?.status === "active" || subscription?.status === "past_due");
+  const isUnpaid = subscription?.status === "unpaid";
+  const isPastDue = subscription?.status === "past_due";
 
   // Fetch meal plans
   const { data: mealPlans, isLoading } = useQuery<MealPlan[]>({
@@ -137,13 +141,37 @@ export default function MealPlans() {
           <Button
             onClick={() => setShowCreateDialog(true)}
             data-testid="button-create-meal-plan"
+            disabled={isUnpaid}
           >
             <Plus className="h-4 w-4 mr-2" />
             新しいプラン作成
           </Button>
         </div>
 
-        {!isPremium && (
+        {/* Payment status warnings */}
+        {isUnpaid && (
+          <Alert variant="destructive" className="mb-6" data-testid="alert-payment-unpaid">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>お支払いが完了していません</AlertTitle>
+            <AlertDescription>
+              猶予期間が終了したため、プレミアム機能をご利用いただけません。
+              お支払いを完了すると、すぐにプレミアム機能が再開されます。
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isPastDue && subscription?.gracePeriodEnd && (
+          <Alert variant="default" className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/20" data-testid="alert-payment-past-due">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+            <AlertTitle className="text-amber-900 dark:text-amber-100">お支払いの確認ができていません</AlertTitle>
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              {format(new Date(subscription.gracePeriodEnd), "M月d日", { locale: ja })}までにお支払いをお願いします。
+              期限を過ぎるとプレミアム機能がご利用いただけなくなります。
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!isPremium && !isUnpaid && (
           <Card className="mb-8 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
             <CardHeader>
               <div className="flex items-center gap-2">
