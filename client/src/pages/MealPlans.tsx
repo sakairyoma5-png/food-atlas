@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MealPlan, UserSubscription } from "@shared/schema";
@@ -16,11 +16,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, DollarSign, ShoppingCart, Trash2, Loader2, Plus, Lock, AlertTriangle, AlertCircle } from "lucide-react";
+import { Calendar, DollarSign, ShoppingCart, Trash2, Loader2, Plus, Lock, AlertTriangle, AlertCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
+
+// Budget thresholds
+const BUDGET_THRESHOLDS = {
+  MIN: 10000,         // Minimum required budget
+  VERY_TIGHT: 15000,  // Very tight budget (warning)
+  TIGHT: 20000,       // Tight budget (note)
+  COMFORTABLE: 30000, // Comfortable budget
+};
 
 export default function MealPlans() {
   const { toast } = useToast();
@@ -46,12 +54,20 @@ export default function MealPlans() {
   // Create meal plan mutation
   const createMealPlanMutation = useMutation({
     mutationFn: async () => {
-      if (!budget || parseFloat(budget) <= 0) {
+      const budgetNum = parseFloat(budget);
+      if (!budget || isNaN(budgetNum) || budgetNum <= 0) {
         throw new Error("有効な予算を入力してください");
       }
 
+      // Client-side minimum budget validation
+      if (budgetNum < BUDGET_THRESHOLDS.MIN) {
+        const error: any = new Error(`月間予算は最低${BUDGET_THRESHOLDS.MIN.toLocaleString()}円以上が必要です`);
+        error.code = "BUDGET_TOO_LOW";
+        throw error;
+      }
+
       const response = await apiRequest("POST", "/api/meal-plans/generate", {
-        budget: parseFloat(budget),
+        budget: budgetNum,
         preferences: preferences || undefined,
       });
 
@@ -63,7 +79,10 @@ export default function MealPlans() {
       }
 
       if (!response.ok) {
-        throw new Error("献立プランの作成に失敗しました");
+        const data = await response.json();
+        const error: any = new Error(data.message || "献立プランの作成に失敗しました");
+        error.code = data.code;
+        throw error;
       }
 
       return response.json();
@@ -86,6 +105,12 @@ export default function MealPlans() {
           variant: "destructive",
         });
         setShowCreateDialog(false);
+      } else if (error.code === "BUDGET_TOO_LOW") {
+        toast({
+          title: "予算が不足しています",
+          description: error.message,
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "エラー",
@@ -144,6 +169,15 @@ export default function MealPlans() {
   });
 
   const handleCreate = () => {
+    // Early return if budget is invalid
+    if (!budgetStatus.valid) {
+      toast({
+        title: "入力エラー",
+        description: budgetStatus.message || "有効な予算を入力してください",
+        variant: "destructive",
+      });
+      return;
+    }
     createMealPlanMutation.mutate();
   };
 
@@ -156,6 +190,44 @@ export default function MealPlans() {
   const handleUpgradeToPremium = () => {
     upgradeToPremiumMutation.mutate();
   };
+
+  // Budget validation and warning logic
+  const budgetStatus = useMemo(() => {
+    const budgetNum = parseFloat(budget);
+    if (!budget || isNaN(budgetNum)) {
+      return { valid: false, level: "empty", message: null };
+    }
+    if (budgetNum < BUDGET_THRESHOLDS.MIN) {
+      return {
+        valid: false,
+        level: "error",
+        message: `最低${BUDGET_THRESHOLDS.MIN.toLocaleString()}円以上の予算が必要です`,
+        dailyBudget: Math.round(budgetNum / 30),
+      };
+    }
+    if (budgetNum < BUDGET_THRESHOLDS.VERY_TIGHT) {
+      return {
+        valid: true,
+        level: "warning",
+        message: `この予算は非常に厳しいです（1日約${Math.round(budgetNum / 30).toLocaleString()}円）。実際の食費が超過する可能性があります。`,
+        dailyBudget: Math.round(budgetNum / 30),
+      };
+    }
+    if (budgetNum < BUDGET_THRESHOLDS.TIGHT) {
+      return {
+        valid: true,
+        level: "info",
+        message: `節約を意識したプランになります（1日約${Math.round(budgetNum / 30).toLocaleString()}円）`,
+        dailyBudget: Math.round(budgetNum / 30),
+      };
+    }
+    return {
+      valid: true,
+      level: "ok",
+      message: null,
+      dailyBudget: Math.round(budgetNum / 30),
+    };
+  }, [budget]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -317,13 +389,14 @@ export default function MealPlans() {
 
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogContent data-testid="dialog-create-meal-plan">
+            <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }}>
             <DialogHeader>
               <DialogTitle>新しい献立プランを作成</DialogTitle>
               <DialogDescription>
                 予算と好みを入力して、世界中の料理から月間献立を自動生成します
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="budget">月間予算（円）</Label>
                 <Input
@@ -333,8 +406,46 @@ export default function MealPlans() {
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
                   data-testid="input-budget"
+                  min={BUDGET_THRESHOLDS.MIN}
                 />
+                {budgetStatus.dailyBudget && budgetStatus.level !== "error" && (
+                  <p className="text-xs text-muted-foreground">
+                    1日あたり約{budgetStatus.dailyBudget.toLocaleString()}円
+                  </p>
+                )}
               </div>
+
+              {budgetStatus.level === "empty" && budget === "" && (
+                <p className="text-xs text-muted-foreground" data-testid="helper-budget-empty">
+                  月額10,000円以上の予算を入力してください
+                </p>
+              )}
+
+              {budgetStatus.level === "error" && budgetStatus.message && (
+                <Alert variant="destructive" data-testid="alert-budget-error">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{budgetStatus.message}</AlertDescription>
+                </Alert>
+              )}
+
+              {budgetStatus.level === "warning" && budgetStatus.message && (
+                <Alert variant="default" className="border-amber-500 bg-amber-50 dark:bg-amber-950/20" data-testid="alert-budget-warning">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                    {budgetStatus.message}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {budgetStatus.level === "info" && budgetStatus.message && (
+                <Alert variant="default" className="border-blue-500 bg-blue-50 dark:bg-blue-950/20" data-testid="alert-budget-info">
+                  <Info className="h-4 w-4 text-blue-600 dark:text-blue-500" />
+                  <AlertDescription className="text-blue-800 dark:text-blue-200">
+                    {budgetStatus.message}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="preferences">好みや制約（オプション）</Label>
                 <Textarea
@@ -349,6 +460,7 @@ export default function MealPlans() {
             </div>
             <DialogFooter>
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => setShowCreateDialog(false)}
                 data-testid="button-cancel"
@@ -356,8 +468,8 @@ export default function MealPlans() {
                 キャンセル
               </Button>
               <Button
-                onClick={handleCreate}
-                disabled={createMealPlanMutation.isPending}
+                type="submit"
+                disabled={createMealPlanMutation.isPending || !budgetStatus.valid}
                 data-testid="button-generate"
               >
                 {createMealPlanMutation.isPending ? (
@@ -370,6 +482,7 @@ export default function MealPlans() {
                 )}
               </Button>
             </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>

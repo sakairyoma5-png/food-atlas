@@ -65,9 +65,35 @@ export function extractRecipeData(message: string): { text: string; recipes: any
   }
 }
 
+// Budget thresholds for meal plan generation
+const BUDGET_THRESHOLDS = {
+  VERY_TIGHT: 15000,  // Very tight budget (warning)
+  TIGHT: 20000,       // Tight budget (note)
+  COMFORTABLE: 30000, // Comfortable budget
+};
+
 // 予算ベースの献立プランを生成する関数
 export async function generateMealPlan(budget: number, preferences?: string): Promise<any> {
-  const prompt = `ユーザーの月間食費予算は${budget.toLocaleString()}円です。${preferences ? `好みや制約: ${preferences}` : ''}
+  // Determine budget level for AI guidance
+  let budgetGuidance = "";
+  if (budget < BUDGET_THRESHOLDS.VERY_TIGHT) {
+    budgetGuidance = `
+
+【重要】この予算（${budget.toLocaleString()}円/月）は非常に厳しいです。
+- 1日あたり約${Math.round(budget / 30).toLocaleString()}円しか使えません
+- 外食や高価な食材は避け、自炊中心のプランにしてください
+- シンプルで低コストな料理を中心に提案してください
+- tipsには「この予算は厳しいため、実際の食費は超過する可能性があります」という警告を含めてください`;
+  } else if (budget < BUDGET_THRESHOLDS.TIGHT) {
+    budgetGuidance = `
+
+【注意】この予算（${budget.toLocaleString()}円/月）はやや厳しいです。
+- 1日あたり約${Math.round(budget / 30).toLocaleString()}円です
+- 節約を意識したメニュー選びが必要です
+- tipsには節約のコツを詳しく含めてください`;
+  }
+
+  const prompt = `ユーザーの月間食費予算は${budget.toLocaleString()}円です。${preferences ? `好みや制約: ${preferences}` : ''}${budgetGuidance}
 
 この予算内で1ヶ月間（30日）の献立プランを作成してください。以下の条件を満たしてください：
 
@@ -77,12 +103,14 @@ export async function generateMealPlan(budget: number, preferences?: string): Pr
 4. 栄養バランスが良い（タンパク質、野菜、炭水化物）
 5. 朝食・昼食・夕食の3食を含む
 6. 予算を超えない範囲で、できるだけ多様な料理を楽しめるようにする
+7. 予算が厳しい場合は、現実的な見積もりを行い、超過リスクがあればtipsで警告してください
 
 以下のJSON形式で献立プランを返してください：
 
 {
   "totalBudget": ${budget},
   "estimatedCost": 実際の見積もり費用,
+  "budgetWarning": 予算が厳しい場合は警告メッセージ（null可）,
   "recipes": [
     {
       "name": "料理名",
