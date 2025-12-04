@@ -452,10 +452,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/meal-plans/generate", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { budget, preferences, startDate, endDate } = req.body;
+      const { budget: rawBudget, preferences, startDate, endDate } = req.body;
 
-      if (!budget || budget <= 0) {
-        return res.status(400).json({ message: "Invalid budget" });
+      // Coerce and validate budget as a number
+      const budget = typeof rawBudget === 'string' ? parseFloat(rawBudget) : Number(rawBudget);
+      
+      if (isNaN(budget) || budget <= 0) {
+        return res.status(400).json({ message: "有効な予算を入力してください" });
+      }
+
+      // Minimum budget validation (10,000 yen per month)
+      const MIN_MONTHLY_BUDGET = 10000;
+      if (budget < MIN_MONTHLY_BUDGET) {
+        return res.status(400).json({ 
+          message: `月間予算は最低${MIN_MONTHLY_BUDGET.toLocaleString()}円以上が必要です。${budget.toLocaleString()}円では現実的な献立プランを作成できません。`,
+          code: "BUDGET_TOO_LOW",
+          minBudget: MIN_MONTHLY_BUDGET,
+        });
       }
 
       // Get and update subscription status BEFORE checking premium access
