@@ -4,3 +4,6 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# 移行スクリプト用データファイル（PII含む可能性があるためリポジトリから除外）
+scripts/migrate/data/
