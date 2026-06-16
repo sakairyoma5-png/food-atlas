@@ -4,9 +4,15 @@ import {
   messages,
   recipes,
   regions,
+  foodLogs,
+  userSubscriptions,
+  mealPlans,
   type InsertConversation,
   type InsertMessage,
   type InsertRecipe,
+  type InsertFoodLog,
+  type InsertUserSubscription,
+  type InsertMealPlan,
 } from "./schema";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -29,10 +35,7 @@ export async function getConversationById(id: string) {
 }
 
 export async function createConversation(data: InsertConversation) {
-  const result = await db
-    .insert(conversations)
-    .values(data)
-    .returning();
+  const result = await db.insert(conversations).values(data).returning();
   return result[0];
 }
 
@@ -110,4 +113,85 @@ export async function getRegionById(id: string) {
     .where(eq(regions.id, id))
     .limit(1);
   return result[0] ?? null;
+}
+
+// Food log queries
+export async function getFoodLogsByUserId(userId: string) {
+  return db
+    .select()
+    .from(foodLogs)
+    .where(eq(foodLogs.userId, userId))
+    .orderBy(desc(foodLogs.date));
+}
+
+export async function getFoodLogById(id: string) {
+  const result = await db
+    .select()
+    .from(foodLogs)
+    .where(eq(foodLogs.id, id))
+    .limit(1);
+  return result[0] ?? null;
+}
+
+export async function createFoodLog(data: InsertFoodLog) {
+  const result = await db.insert(foodLogs).values(data).returning();
+  return result[0];
+}
+
+export async function deleteFoodLog(id: string) {
+  await db.delete(foodLogs).where(eq(foodLogs.id, id));
+}
+
+// Subscription queries
+export async function getUserSubscription(userId: string) {
+  const result = await db
+    .select()
+    .from(userSubscriptions)
+    .where(eq(userSubscriptions.userId, userId))
+    .limit(1);
+  return result[0] ?? null;
+}
+
+export async function createUserSubscription(data: InsertUserSubscription) {
+  const result = await db.insert(userSubscriptions).values(data).returning();
+  return result[0];
+}
+
+export async function updateUserSubscription(
+  userId: string,
+  data: Partial<InsertUserSubscription>
+) {
+  const result = await db
+    .update(userSubscriptions)
+    .set(data)
+    .where(eq(userSubscriptions.userId, userId))
+    .returning();
+  return result[0] ?? null;
+}
+
+// Meal plan queries
+export async function getMealPlansByUserId(userId: string) {
+  return db
+    .select()
+    .from(mealPlans)
+    .where(eq(mealPlans.userId, userId))
+    .orderBy(desc(mealPlans.createdAt));
+}
+
+export async function getMealPlanById(id: string) {
+  const result = await db
+    .select()
+    .from(mealPlans)
+    .where(eq(mealPlans.id, id))
+    .limit(1);
+  return result[0] ?? null;
+}
+
+export async function createMealPlan(data: InsertMealPlan) {
+  const result = await db.insert(mealPlans).values(data).returning();
+  return result[0];
+}
+
+export async function deleteMealPlan(id: string) {
+  await db.delete(mealPlans).where(eq(mealPlans.id, id));
 }
