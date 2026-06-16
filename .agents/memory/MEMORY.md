@@ -1,2 +1,2 @@
-- [Next.js migration architecture](nextjs-migration.md) — nextjs-app/ subdirectory keeps Replit Express app untouched; Vercel root dir = nextjs-app/
-- [Supabase Auth setup](supabase-auth.md) — auth callback upserts to users table; Google/GitHub/email auth; redirect URL config needed in Supabase dashboard
+- [Next.js migration architecture](nextjs-migration.md) — nextjs-app/ subdirectory keeps Replit Express app untouched; Vercel root dir = nextjs-app/; drizzle-kit needs --config flag
+- [Supabase Auth setup](supabase-auth.md) — auth callback upserts to users table; Google/GitHub/email auth; redirect URL config required in Supabase dashboard
