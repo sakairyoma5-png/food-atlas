@@ -1,16 +1,56 @@
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import RecipeDetail from "@/components/recipe-detail"
+import AffiliateLinksSection from "@/components/affiliate-links-section"
+import { getRecipeById } from "@/lib/db/queries"
+import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
   title: "レシピ詳細 | Food Atlas",
 }
 
-export default function RecipePage({ params }: { params: { id: string } }) {
+export default async function RecipePage({
+  params,
+}: {
+  params: { id: string }
+}) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    notFound()
+  }
+
+  const recipe = await getRecipeById(params.id)
+
+  if (!recipe || recipe.userId !== user.id) {
+    notFound()
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-display font-bold mb-2">レシピ詳細</h1>
-      <p className="text-muted-foreground mb-4">Recipe ID: {params.id}</p>
-      <div className="bg-muted/30 rounded-xl p-8 text-center text-muted-foreground">
-        <p>レシピ詳細ページは次のフェーズで実装されます</p>
+      <div className="mb-6">
+        <Button variant="ghost" asChild data-testid="button-back">
+          <Link href="/home">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            戻る
+          </Link>
+        </Button>
+      </div>
+
+      <RecipeDetail recipe={recipe} />
+
+      <div className="mt-8">
+        <AffiliateLinksSection
+          recipeName={recipe.name}
+          ingredients={recipe.ingredients}
+          region={recipe.region}
+        />
       </div>
     </div>
   )
