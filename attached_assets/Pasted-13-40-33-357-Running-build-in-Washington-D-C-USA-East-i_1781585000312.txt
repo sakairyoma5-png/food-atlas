@@ -1,0 +1,76 @@
+13:40:33.357 Running build in Washington, D.C., USA (East) – iad1
+13:40:33.357 Build machine configuration: 2 cores, 8 GB
+13:40:33.371 Cloning github.com/sakairyoma5-png/food-atlas (Branch: main, Commit: 49b6659)
+13:40:33.372 Skipping build cache, deployment was triggered without cache.
+13:40:34.669 Cloning completed: 1.298s
+13:40:34.967 Running "vercel build"
+13:40:34.983 Vercel CLI 54.14.0
+13:40:35.449 Running "install" command: `npm install --legacy-peer-deps`...
+13:41:14.648 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+13:41:14.702 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+13:41:27.438 npm warn deprecated next@15.3.3: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/CVE-2025-66478 for more details.
+13:41:28.042 
+13:41:28.043 added 486 packages, and audited 487 packages in 52s
+13:41:28.044 
+13:41:28.044 157 packages are looking for funding
+13:41:28.045   run `npm fund` for details
+13:41:28.187 
+13:41:28.188 12 vulnerabilities (3 moderate, 8 high, 1 critical)
+13:41:28.188 
+13:41:28.188 To address issues that do not require attention, run:
+13:41:28.188   npm audit fix
+13:41:28.189 
+13:41:28.189 To address all issues (including breaking changes), run:
+13:41:28.189   npm audit fix --force
+13:41:28.189 
+13:41:28.189 Run `npm audit` for details.
+13:41:28.270 Detected Next.js version: 15.3.3
+13:41:28.271 Running "npm run build"
+13:41:28.386 
+13:41:28.387 > food-atlas-nextjs@0.1.0 build
+13:41:28.387 > next build
+13:41:28.387 
+13:41:28.984 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+13:41:28.985 This information is used to shape Next.js' roadmap and prioritize features.
+13:41:28.985 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+13:41:28.986 https://nextjs.org/telemetry
+13:41:28.986 
+13:41:29.051    ▲ Next.js 15.3.3
+13:41:29.051 
+13:41:29.067    Creating an optimized production build ...
+13:41:46.408 <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (102kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+13:41:46.412 <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (250kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+13:41:46.594  ⚠ Compiled with warnings in 2000ms
+13:41:46.595 
+13:41:46.595 ./node_modules/@supabase/supabase-js/dist/index.mjs
+13:41:46.596 A Node.js API is used (process.version at line: 27) which is not supported in the Edge Runtime.
+13:41:46.596 Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+13:41:46.596 
+13:41:46.596 Import trace for requested module:
+13:41:46.597 ./node_modules/@supabase/supabase-js/dist/index.mjs
+13:41:46.597 ./node_modules/@supabase/ssr/dist/module/createBrowserClient.js
+13:41:46.597 ./node_modules/@supabase/ssr/dist/module/index.js
+13:41:46.597 ./lib/supabase/middleware.ts
+13:41:46.597 
+13:41:59.085  ✓ Compiled successfully in 26.0s
+13:41:59.088    Linting and checking validity of types ...
+13:41:59.372 
+13:41:59.372    We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+13:41:59.373    The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+13:41:59.373 
+13:41:59.373    	- target was set to ES2017 (For top-level `await`. Note: Next.js only polyfills for the esmodules target.)
+13:41:59.374 
+13:42:05.875 Failed to compile.
+13:42:05.875 
+13:42:05.875 ./lib/supabase/middleware.ts:15:16
+13:42:05.875 Type error: Parameter 'cookiesToSet' implicitly has an 'any' type.
+13:42:05.875 
+13:42:05.876   13 |           return request.cookies.getAll();
+13:42:05.876   14 |         },
+13:42:05.876 > 15 |         setAll(cookiesToSet) {
+13:42:05.876      |                ^
+13:42:05.876   16 |           cookiesToSet.forEach(({ name, value }) =>
+13:42:05.876   17 |             request.cookies.set(name, value)
+13:42:05.876   18 |           );
+13:42:05.906 Next.js build worker exited with code: 1 and signal: null
+13:42:05.938 Error: Command "npm run build" exited with 1
