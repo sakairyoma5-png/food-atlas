@@ -101,6 +101,13 @@ export async function updateRecipeSaveStatus(id: string, isSaved: boolean) {
   return result[0];
 }
 
+export async function getAllRecipesForSitemap() {
+  return db
+    .select({ id: recipes.id, updatedAt: recipes.updatedAt })
+    .from(recipes)
+    .orderBy(desc(recipes.updatedAt));
+}
+
 // Region queries
 export async function getAllRegions() {
   return db.select().from(regions);

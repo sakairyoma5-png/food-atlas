@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!recipe) {
     return {
-      title: "レシピ詳細 | Food Atlas",
+      title: "レシピ詳細",
       description: "Food Atlasのレシピ詳細ページです。",
     }
   }
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : `${recipe.region}の料理「${recipe.name}」のレシピ。調理時間${recipe.cookingTime ?? "—"}分、難易度${recipe.difficulty ?? "—"}。`
 
   return {
-    title: `${recipe.name}のレシピ | Food Atlas`,
+    title: `${recipe.name}のレシピ`,
     description,
     openGraph: {
       title: `${recipe.name}のレシピ | Food Atlas`,

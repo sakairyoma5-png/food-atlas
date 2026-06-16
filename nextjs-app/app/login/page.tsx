@@ -6,6 +6,16 @@ import Link from "next/link"
 export const metadata: Metadata = {
   title: "ログイン",
   description: "Food Atlasにログインして世界の料理を探索しましょう",
+  openGraph: {
+    title: "ログイン | Food Atlas",
+    description: "Food Atlasにログインして世界の料理を探索しましょう",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "ログイン | Food Atlas",
+    description: "Food Atlasにログインして世界の料理を探索しましょう",
+  },
 }
 
 export default function LoginPage() {
