@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     // Get conversation history
     const history = await getMessagesByConversationId(conversation.id)
 
-    // Call OpenAI
+    // Call Gemini
     const completion = await openai.chat.completions.create({
       model: DEFAULT_MODEL,
       messages: [
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
           content: m.content,
         })),
       ],
-      max_completion_tokens: 8192,
+      max_tokens: 8192,
     })
 
     const assistantRaw = completion.choices[0].message.content || ""

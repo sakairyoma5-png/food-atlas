@@ -1,20 +1,14 @@
 import OpenAI from "openai";
 
-// Replit AI Integration uses a proxy endpoint and dummy API key.
-// On Vercel (or any external deployment), standard OPENAI_API_KEY is used.
-const replitBaseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
-const replitApiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
-
+// GeminiのOpenAI互換エンドポイントを使用
+// APIキーはGoogle AI Studio (aistudio.google.com) で取得: GEMINI_API_KEY
 export const openai = new OpenAI({
-  apiKey: replitBaseURL ? (replitApiKey ?? "_") : process.env.OPENAI_API_KEY,
-  ...(replitBaseURL ? { baseURL: replitBaseURL } : {}),
+  apiKey: process.env.GEMINI_API_KEY ?? "",
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
 });
 
-// Replit AI Integration exposes "gpt-5-mini" as the model name.
-// On Vercel we use the standard OpenAI model "gpt-4o-mini".
-export const DEFAULT_MODEL = replitBaseURL
-  ? "gpt-5-mini"
-  : (process.env.OPENAI_MODEL ?? "gpt-4o-mini");
+export const DEFAULT_MODEL =
+  process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
 
 export const SYSTEM_PROMPT = `あなたは世界中の料理について詳しい親しみやすいAIアシスタントです。
 
