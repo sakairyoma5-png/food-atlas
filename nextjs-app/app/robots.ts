@@ -14,7 +14,6 @@ export default function robots(): MetadataRoute.Robots {
           "/map",
           "/logs",
           "/meal-plans",
-          "/recipe/",
           "/auth/",
         ],
       },
