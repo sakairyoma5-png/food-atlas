@@ -10,7 +10,10 @@
     "db:push": "drizzle-kit push --config lib/db/drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config lib/db/drizzle.config.ts",
     "db:generate": "drizzle-kit generate --config lib/db/drizzle.config.ts",
-    "db:studio": "drizzle-kit studio --config lib/db/drizzle.config.ts"
+    "db:studio": "drizzle-kit studio --config lib/db/drizzle.config.ts",
+    "migrate:export": "node scripts/migrate/export.mjs",
+    "migrate:import": "node scripts/migrate/import.mjs",
+    "migrate:verify": "node scripts/migrate/verify.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
