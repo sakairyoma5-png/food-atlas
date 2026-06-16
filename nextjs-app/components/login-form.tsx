@@ -37,6 +37,8 @@ export default function LoginForm() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
+        // Ensure the user row exists in public.users (email auth bypasses /auth/callback)
+        await fetch("/api/auth/sync-user", { method: "POST" })
         window.location.href = "/home"
       }
     } catch (error: unknown) {
