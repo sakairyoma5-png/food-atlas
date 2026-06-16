@@ -4,9 +4,10 @@ import { getConversationById } from "@/lib/db/queries"
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const {
       data: { user },
@@ -16,7 +17,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const conversation = await getConversationById(params.id)
+    const conversation = await getConversationById(id)
     if (!conversation) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
@@ -25,6 +26,7 @@ export async function GET(
     }
 
     return NextResponse.json(conversation)
+
   } catch (error) {
     console.error("Error fetching conversation:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

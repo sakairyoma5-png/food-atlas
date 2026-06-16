@@ -4,9 +4,10 @@ import { getConversationById, getMessagesByConversationId } from "@/lib/db/queri
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const {
       data: { user },
@@ -16,7 +17,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const conversation = await getConversationById(params.id)
+    const conversation = await getConversationById(id)
     if (!conversation) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
@@ -24,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: "Access denied" }, { status: 403 })
     }
 
-    const messages = await getMessagesByConversationId(params.id)
+    const messages = await getMessagesByConversationId(id)
     return NextResponse.json(messages)
   } catch (error) {
     console.error("Error fetching messages:", error)

@@ -9,10 +9,11 @@ import { getRecipeById } from "@/lib/db/queries"
 import { createClient } from "@/lib/supabase/server"
 
 type Props = {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
   const supabase = await createClient()
   const {
     data: { user },
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
-  const recipe = await getRecipeById(params.id).catch(() => null)
+  const recipe = await getRecipeById(id).catch(() => null)
 
   if (!recipe || recipe.userId !== user.id) {
     return {
@@ -57,6 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function RecipePage({ params }: Props) {
+  const { id } = await params
   const supabase = await createClient()
   const {
     data: { user },
@@ -66,7 +68,7 @@ export default async function RecipePage({ params }: Props) {
     notFound()
   }
 
-  const recipe = await getRecipeById(params.id)
+  const recipe = await getRecipeById(id)
 
   if (!recipe || recipe.userId !== user.id) {
     notFound()

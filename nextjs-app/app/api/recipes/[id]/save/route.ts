@@ -9,9 +9,10 @@ const saveSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const {
       data: { user },
@@ -27,7 +28,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid input" }, { status: 400 })
     }
 
-    const existing = await getRecipeById(params.id)
+    const existing = await getRecipeById(id)
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
@@ -35,7 +36,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Access denied" }, { status: 403 })
     }
 
-    const recipe = await updateRecipeSaveStatus(params.id, parsed.data.isSaved)
+    const recipe = await updateRecipeSaveStatus(id, parsed.data.isSaved)
     return NextResponse.json(recipe)
   } catch (error) {
     console.error("Error updating recipe save status:", error)

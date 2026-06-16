@@ -4,14 +4,15 @@ import { getMealPlanById, deleteMealPlan } from "@/lib/db/queries"
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const plan = await getMealPlanById(params.id)
+    const plan = await getMealPlanById(id)
     if (!plan) return NextResponse.json({ error: "Not found" }, { status: 404 })
     if (plan.userId !== user.id) return NextResponse.json({ error: "Access denied" }, { status: 403 })
 
@@ -24,18 +25,19 @@ export async function GET(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const plan = await getMealPlanById(params.id)
+    const plan = await getMealPlanById(id)
     if (!plan) return NextResponse.json({ error: "Not found" }, { status: 404 })
     if (plan.userId !== user.id) return NextResponse.json({ error: "Access denied" }, { status: 403 })
 
-    await deleteMealPlan(params.id)
+    await deleteMealPlan(id)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error deleting meal plan:", error)
