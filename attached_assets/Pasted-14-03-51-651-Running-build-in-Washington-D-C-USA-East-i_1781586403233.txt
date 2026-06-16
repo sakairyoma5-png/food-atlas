@@ -1,0 +1,113 @@
+14:03:51.651 Running build in Washington, D.C., USA (East) – iad1
+14:03:51.652 Build machine configuration: 2 cores, 8 GB
+14:03:51.772 Cloning github.com/sakairyoma5-png/food-atlas (Branch: main, Commit: 9d4a60a)
+14:03:51.773 Previous build caches not available.
+14:03:52.953 Cloning completed: 1.181s
+14:03:53.302 Running "vercel build"
+14:03:53.321 Vercel CLI 54.14.0
+14:03:53.664 Running "install" command: `npm install --legacy-peer-deps`...
+14:04:29.502 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+14:04:29.623 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+14:04:43.666 npm warn deprecated next@15.3.3: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/CVE-2025-66478 for more details.
+14:04:44.278 
+14:04:44.279 added 486 packages, and audited 487 packages in 50s
+14:04:44.279 
+14:04:44.280 157 packages are looking for funding
+14:04:44.280   run `npm fund` for details
+14:04:44.434 
+14:04:44.434 12 vulnerabilities (3 moderate, 8 high, 1 critical)
+14:04:44.435 
+14:04:44.436 To address issues that do not require attention, run:
+14:04:44.436   npm audit fix
+14:04:44.437 
+14:04:44.437 To address all issues (including breaking changes), run:
+14:04:44.437   npm audit fix --force
+14:04:44.438 
+14:04:44.438 Run `npm audit` for details.
+14:04:44.516 Detected Next.js version: 15.3.3
+14:04:44.518 Running "npm run build"
+14:04:44.639 
+14:04:44.639 > food-atlas-nextjs@0.1.0 build
+14:04:44.640 > next build
+14:04:44.640 
+14:04:45.345 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+14:04:45.345 This information is used to shape Next.js' roadmap and prioritize features.
+14:04:45.346 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+14:04:45.347 https://nextjs.org/telemetry
+14:04:45.347 
+14:04:45.417    ▲ Next.js 15.3.3
+14:04:45.418 
+14:04:45.436    Creating an optimized production build ...
+14:05:03.129 <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (102kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+14:05:03.135 <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (250kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+14:05:03.356  ⚠ Compiled with warnings in 2000ms
+14:05:03.356 
+14:05:03.356 ./node_modules/@supabase/supabase-js/dist/index.mjs
+14:05:03.357 A Node.js API is used (process.version at line: 27) which is not supported in the Edge Runtime.
+14:05:03.357 Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+14:05:03.358 
+14:05:03.358 Import trace for requested module:
+14:05:03.358 ./node_modules/@supabase/supabase-js/dist/index.mjs
+14:05:03.358 ./node_modules/@supabase/ssr/dist/module/createBrowserClient.js
+14:05:03.358 ./node_modules/@supabase/ssr/dist/module/index.js
+14:05:03.359 ./lib/supabase/middleware.ts
+14:05:03.359 
+14:05:15.047  ✓ Compiled successfully in 25.0s
+14:05:15.050    Linting and checking validity of types ...
+14:05:15.341 
+14:05:15.342    We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+14:05:15.343    The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+14:05:15.343 
+14:05:15.343    	- target was set to ES2017 (For top-level `await`. Note: Next.js only polyfills for the esmodules target.)
+14:05:15.343 
+14:05:21.822    Collecting page data ...
+14:05:24.620    Generating static pages (0/23) ...
+14:05:25.351    Generating static pages (5/23) 
+14:05:25.715    Generating static pages (11/23) 
+14:05:25.715    Generating static pages (17/23) 
+14:05:25.715  ✓ Generating static pages (23/23)
+14:05:26.058    Finalizing page optimization ...
+14:05:26.062    Collecting build traces ...
+14:05:32.087 
+14:05:32.110 Route (app)                                 Size  First Load JS
+14:05:32.110 ┌ ƒ /                                    5.17 kB         216 kB
+14:05:32.111 ├ ○ /_not-found                            200 B         101 kB
+14:05:32.111 ├ ƒ /api/auth/sync-user                    200 B         101 kB
+14:05:32.122 ├ ƒ /api/auth/user                         200 B         101 kB
+14:05:32.123 ├ ƒ /api/chat/completion                   200 B         101 kB
+14:05:32.123 ├ ƒ /api/conversations                     200 B         101 kB
+14:05:32.124 ├ ƒ /api/conversations/[id]                200 B         101 kB
+14:05:32.124 ├ ƒ /api/conversations/[id]/messages       200 B         101 kB
+14:05:32.124 ├ ƒ /api/logs                              200 B         101 kB
+14:05:32.125 ├ ƒ /api/logs/[id]                         200 B         101 kB
+14:05:32.130 ├ ƒ /api/meal-plans                        200 B         101 kB
+14:05:32.135 ├ ƒ /api/meal-plans/[id]                   200 B         101 kB
+14:05:32.136 ├ ƒ /api/meal-plans/generate               200 B         101 kB
+14:05:32.136 ├ ƒ /api/recipes                           200 B         101 kB
+14:05:32.137 ├ ƒ /api/recipes/[id]                      200 B         101 kB
+14:05:32.139 ├ ƒ /api/recipes/[id]/save                 200 B         101 kB
+14:05:32.142 ├ ƒ /api/recipes/saved                     200 B         101 kB
+14:05:32.143 ├ ƒ /api/regions                           200 B         101 kB
+14:05:32.143 ├ ƒ /api/subscription                      200 B         101 kB
+14:05:32.143 ├ ƒ /auth/callback                         200 B         101 kB
+14:05:32.144 ├ ƒ /home                                8.37 kB         117 kB
+14:05:32.144 ├ ○ /login                               6.93 kB         184 kB
+14:05:32.144 ├ ƒ /logs                                31.5 kB         164 kB
+14:05:32.145 ├ ƒ /map                                 45.1 kB         153 kB
+14:05:32.145 ├ ƒ /meal-plans                          14.1 kB         146 kB
+14:05:32.145 ├ ƒ /recipe/[id]                         7.18 kB         119 kB
+14:05:32.146 ├ ○ /robots.txt                            200 B         101 kB
+14:05:32.146 └ ○ /sitemap.xml                           200 B         101 kB
+14:05:32.146 + First Load JS shared by all             101 kB
+14:05:32.147   ├ chunks/1684-ed436290d447ae1a.js      45.9 kB
+14:05:32.147   ├ chunks/4bd1b696-479114e9d9c42f8a.js  53.2 kB
+14:05:32.147   └ other shared chunks (total)          1.93 kB
+14:05:32.147 
+14:05:32.148 
+14:05:32.148 ƒ Middleware                             88.9 kB
+14:05:32.149 
+14:05:32.150 ○  (Static)   prerendered as static content
+14:05:32.150 ƒ  (Dynamic)  server-rendered on demand
+14:05:32.150 
+14:05:32.393 Traced Next.js server files in: 111.697ms
+14:05:32.551 Created all serverless functions in: 158.433ms
