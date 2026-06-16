@@ -13,9 +13,21 @@ type Props = {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return {
+      title: "レシピ詳細",
+      description: "Food Atlasのレシピ詳細ページです。",
+    }
+  }
+
   const recipe = await getRecipeById(params.id).catch(() => null)
 
-  if (!recipe) {
+  if (!recipe || recipe.userId !== user.id) {
     return {
       title: "レシピ詳細",
       description: "Food Atlasのレシピ詳細ページです。",
@@ -24,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const description = recipe.description
     ? recipe.description.slice(0, 150)
-    : `${recipe.region}の料理「${recipe.name}」のレシピ。調理時間${recipe.cookingTime ?? "—"}分、難易度${recipe.difficulty ?? "—"}。`
+    : `${recipe.region}の料理「${recipe.name}」のレシピ。調理時間${recipe.cookingTime ?? "—"}分。`
 
   return {
     title: `${recipe.name}のレシピ`,
