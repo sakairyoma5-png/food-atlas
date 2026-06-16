@@ -4,7 +4,7 @@ import { Globe } from "lucide-react"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "ログイン | Food Atlas",
+  title: "ログイン",
   description: "Food Atlasにログインして世界の料理を探索しましょう",
 }
 

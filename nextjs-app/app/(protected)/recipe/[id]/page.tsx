@@ -8,15 +8,43 @@ import AffiliateLinksSection from "@/components/affiliate-links-section"
 import { getRecipeById } from "@/lib/db/queries"
 import { createClient } from "@/lib/supabase/server"
 
-export const metadata: Metadata = {
-  title: "レシピ詳細 | Food Atlas",
+type Props = {
+  params: { id: string }
 }
 
-export default async function RecipePage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const recipe = await getRecipeById(params.id).catch(() => null)
+
+  if (!recipe) {
+    return {
+      title: "レシピ詳細 | Food Atlas",
+      description: "Food Atlasのレシピ詳細ページです。",
+    }
+  }
+
+  const description = recipe.description
+    ? recipe.description.slice(0, 150)
+    : `${recipe.region}の料理「${recipe.name}」のレシピ。調理時間${recipe.cookingTime ?? "—"}分、難易度${recipe.difficulty ?? "—"}。`
+
+  return {
+    title: `${recipe.name}のレシピ | Food Atlas`,
+    description,
+    openGraph: {
+      title: `${recipe.name}のレシピ | Food Atlas`,
+      description,
+      type: "article",
+      ...(recipe.imageUrl ? { images: [{ url: recipe.imageUrl }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${recipe.name}のレシピ | Food Atlas`,
+      description,
+      ...(recipe.imageUrl ? { images: [recipe.imageUrl] } : {}),
+    },
+  }
+}
+
+export default async function RecipePage({ params }: Props) {
   const supabase = await createClient()
   const {
     data: { user },

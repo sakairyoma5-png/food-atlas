@@ -4,11 +4,21 @@ export default function robots(): MetadataRoute.Robots {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://food-atlas.vercel.app"
 
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: ["/api/", "/(protected)/"],
-    },
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/api/",
+          "/home",
+          "/map",
+          "/logs",
+          "/meal-plans",
+          "/recipe/",
+          "/auth/",
+        ],
+      },
+    ],
     sitemap: `${baseUrl}/sitemap.xml`,
   }
 }
